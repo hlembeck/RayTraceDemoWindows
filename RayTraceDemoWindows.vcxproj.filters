@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Common">
+      <UniqueIdentifier>{ebfd0dd3-3e6c-484f-998a-dd866b1bc1bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RayTrace">
+      <UniqueIdentifier>{4c186cf3-8df5-49b0-b404-503ffa0843c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene">
+      <UniqueIdentifier>{5f470edc-52cf-482e-a393-ed969c85658c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Windows">
+      <UniqueIdentifier>{b46cd809-cef5-4eb0-aef6-acb13eb83db5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common\Header Files">
+      <UniqueIdentifier>{25db8e0b-590b-49b6-b06d-a1fdb113777e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common\Source Files">
+      <UniqueIdentifier>{b2353988-85e2-4618-9ae0-648c8e28d88b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Windows\Source Files">
+      <UniqueIdentifier>{090ac673-6a1e-4a75-9868-4019f53e2d8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Windows\Resource Files">
+      <UniqueIdentifier>{c30a222c-a03e-4cd9-a0d3-af668ace8638}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Windows\Header Files">
+      <UniqueIdentifier>{d49add9d-e86a-49e8-8ada-8c0c6131032c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene\Source Files">
+      <UniqueIdentifier>{cd25314f-3e04-4cb9-a98f-891555a77b7f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scene\Header Files">
+      <UniqueIdentifier>{e2010d66-5178-4ca2-8b79-6329c143b29f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RayTrace\Header Files">
+      <UniqueIdentifier>{04dd7877-5bdf-4fed-9366-090b05b18535}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RayTrace\Source Files">
+      <UniqueIdentifier>{aa0029dd-d0db-4e7e-ae5c-be15a91da41b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BasicTypes.h">
+      <Filter>Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ColorModel.cuh">
+      <Filter>Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Spectrum.cuh">
+      <Filter>Common\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RayTrace.cuh">
+      <Filter>RayTrace\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RayTraceEntry.cuh">
+      <Filter>RayTrace\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StandardMesh.cuh">
+      <Filter>Scene\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneTransform.cuh">
+      <Filter>Scene\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RayTraceDemoWindows.h">
+      <Filter>Windows\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Windows\Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="ColorModel.cu">
+      <Filter>Common\Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Spectrum.cu">
+      <Filter>Common\Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="RayTraceEntry.cu">
+      <Filter>RayTrace\Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="RayTrace.cu">
+      <Filter>RayTrace\Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="StandardMesh.cu">
+      <Filter>Scene\Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="SceneTransform.cu">
+      <Filter>Scene\Source Files</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="RayTraceDemoWindows.cpp">
+      <Filter>Windows\Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="RayTraceDemoWindows.rc">
+      <Filter>Windows\Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
