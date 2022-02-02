@@ -1,10 +1,10 @@
 #pragma once
 
-#include <windows.h>
-#include <vector>
 #include <string>
 #include "resource.h"
 #include "RayTraceEntry.cuh"
+#include "ParamsMenu.h"
+#include "pngIO.h"
 
 struct RTParams {
 	ImgParamPinhole params;

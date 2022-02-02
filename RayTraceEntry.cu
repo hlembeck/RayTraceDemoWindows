@@ -7,7 +7,7 @@ bool populatePixelSamples(ImgParamPinhole& params, double* &samples, double* &pi
 
 bool populateRGBQuadArray(ImgParamPinhole& params, unsigned char* &rgbQuadArr, double* pixelSamples, cudaError_t& cudaStatus);
 
-bool getPinholeBitmap(ImgParamPinhole& params, Scene& scene, unsigned char* &rgbQuadArr) {
+bool getPinholeImage(ImgParamPinhole& params, Scene& scene, unsigned char* &rgbQuadArr) {
 	/*
 	To store the ray information for each sample ray.
 	LOCATION: Device

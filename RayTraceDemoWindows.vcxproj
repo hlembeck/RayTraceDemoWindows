@@ -13,6 +13,8 @@
   <ItemGroup>
     <ClInclude Include="BasicTypes.h" />
     <ClInclude Include="ColorModel.cuh" />
+    <ClInclude Include="lodepng.h" />
+    <ClInclude Include="ParamsMenu.h" />
     <ClInclude Include="RayTrace.cuh" />
     <ClInclude Include="RayTraceDemoWindows.h" />
     <ClInclude Include="RayTraceEntry.cuh" />
@@ -20,6 +22,7 @@
     <ClInclude Include="SceneTransform.cuh" />
     <ClInclude Include="Spectrum.cuh" />
     <ClInclude Include="StandardMesh.cuh" />
+    <ClInclude Include="pngIO.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="ColorModel.cu" />
@@ -30,7 +33,10 @@
     <CudaCompile Include="StandardMesh.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="lodepng.cpp" />
+    <ClCompile Include="ParamsMenu.cpp" />
     <ClCompile Include="RayTraceDemoWindows.cpp" />
+    <ClCompile Include="pngIO.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="RayTraceDemoWindows.rc" />

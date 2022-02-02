@@ -40,6 +40,15 @@
     <Filter Include="RayTrace\Source Files">
       <UniqueIdentifier>{aa0029dd-d0db-4e7e-ae5c-be15a91da41b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="File IO">
+      <UniqueIdentifier>{c15140de-fdcb-4dd6-9142-fc0afebda710}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File IO\Header Files">
+      <UniqueIdentifier>{8bc21e1a-c4e5-48db-846e-2b29c89c17bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File IO\Source Files">
+      <UniqueIdentifier>{f1131ce3-c79a-4591-aa22-83cbffadde57}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BasicTypes.h">
@@ -69,6 +78,15 @@
     <ClInclude Include="resource.h">
       <Filter>Windows\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="pngIO.h">
+      <Filter>File IO\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lodepng.h">
+      <Filter>File IO\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParamsMenu.h">
+      <Filter>Windows\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="ColorModel.cu">
@@ -92,6 +110,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RayTraceDemoWindows.cpp">
+      <Filter>Windows\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pngIO.cpp">
+      <Filter>File IO\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lodepng.cpp">
+      <Filter>File IO\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParamsMenu.cpp">
       <Filter>Windows\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
