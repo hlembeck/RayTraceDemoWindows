@@ -89,49 +89,34 @@ __global__ void testFaces(Ray& ray, Face* faces, unsigned int len, double* times
 	}
 }
 
-__global__ void testMeshes(Ray& ray, Mesh* meshes, unsigned int len, double* outer_times, unsigned int* indices) {
-	unsigned int index = blockIdx.x * 512 + threadIdx.x;
-	if (index < len) {
-		double* inner_times = new double[meshes[index].len];
-		unsigned int numBlocks = (meshes[index].len & 511 ? (meshes[index].len >> 9) + 1 : meshes[index].len >> 9);
-		testFaces << <numBlocks, 512 >> > (ray, meshes[index].faces, meshes[index].len, inner_times);
-		cudaDeviceSynchronize();
-		indices[index] = smallestTime(inner_times, meshes[index].len);
-		outer_times[index] = inner_times[indices[index]];
-		delete[] inner_times;
-	}
-}
-
-__global__ void traceRays(Ray* rays, Mesh* meshes, unsigned int len, IntersectionData* data, unsigned int width, unsigned int nRays, unsigned int nReflections) {
+__global__ void traceRays(Ray* rays, Face* faces, unsigned int numFaces, IntersectionData* data, unsigned int width, unsigned int nRays, unsigned int nReflections) {
 	unsigned int index = (blockIdx.x * width + blockIdx.y) * nRays * nRays + threadIdx.x * nRays + threadIdx.y;
-	if (meshes == NULL) {
+	if (faces == NULL) {
 		data[index * nReflections].angle = 0.0;
 		data[index * nReflections].spectrum = NULL;
 		return;
 	}
-	unsigned int numBlocks = (len & 511 ? (len >> 9) + 1 : len >> 9);
-	double* times = new double[len];
-	unsigned int* indices = new unsigned int[len];
-	testMeshes << <numBlocks, 512 >> > (rays[index], meshes, len, times, indices);
+	unsigned int numBlocks = (numFaces & 511 ? (numFaces >> 9) + 1 : numFaces >> 9);
+	double* times = new double[numFaces];
+	testFaces<<<numBlocks, 512 >>>(rays[index], faces, numFaces, times);
 	cudaDeviceSynchronize();
-	unsigned int s = smallestTime(times, len);
+	unsigned int s = smallestTime(times, numFaces);
 	if (times[s] < DBL_MAX) {
 		rays[index].o.x += rays[index].d.x * times[s];
 		rays[index].o.y += rays[index].d.y * times[s];
 		rays[index].o.z += rays[index].d.z * times[s];
-		data[index * nReflections].spectrum = meshes[s].faces[indices[s]].spd;
-		data[index * nReflections].angle = dot(rays[index].d, meshes[s].faces[indices[s]].n) / (rays[index].d.x * rays[index].d.x + rays[index].d.y * rays[index].d.y + rays[index].d.z * rays[index].d.z);
+		data[index * nReflections].spectrum = faces[s].spd;
+		data[index * nReflections].angle = dot(rays[index].d, faces[s].n) / (rays[index].d.x * rays[index].d.x + rays[index].d.y * rays[index].d.y + rays[index].d.z * rays[index].d.z);
 		double mag = rays[index].d.x * rays[index].d.x + rays[index].d.y * rays[index].d.y + rays[index].d.z * rays[index].d.z;
 		rays[index].d.x = rays[index].d.x / mag;
 		rays[index].d.y = rays[index].d.y / mag;
 		rays[index].d.z = rays[index].d.z / mag;
-		mag = 2.0 * dot(rays[index].d, meshes[s].faces[indices[s]].n);
-		rays[index].d.x -= mag * meshes[s].faces[indices[s]].n.x;
-		rays[index].d.y -= mag * meshes[s].faces[indices[s]].n.y;
-		rays[index].d.z -= mag * meshes[s].faces[indices[s]].n.z;
+		mag = 2.0 * dot(rays[index].d, faces[s].n);
+		rays[index].d.x -= mag * faces[s].n.x;
+		rays[index].d.y -= mag * faces[s].n.y;
+		rays[index].d.z -= mag * faces[s].n.z;
 	}
 	delete[] times;
-	delete[] indices;
 }
 
 __global__ void addToSample(double angle, double* spectrum, double* sample) {
@@ -167,4 +152,10 @@ __global__ void computePixels(double* samples, double* pixels, unsigned int widt
 			cudaDeviceSynchronize();
 		}
 	}
+}
+
+__global__ void setSpectrums(Face* faces, unsigned int len, double* spectrums) {
+	unsigned int i = (blockIdx.x << 9) + threadIdx.x;
+	if (i < len)
+		faces[(blockIdx.x << 9) + threadIdx.x].spd = &spectrums[faces[(blockIdx.x << 9) + threadIdx.x].spdIndex];
 }

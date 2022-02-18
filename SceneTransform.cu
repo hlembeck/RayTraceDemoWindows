@@ -106,3 +106,46 @@ __global__ void transformMeshes(Mesh* meshes, double* mat) {
 	unsigned int numBlocks = (len & 511 ? (len >> 9) + 1 : len >> 9);
 	transformFaces << <numBlocks, 512 >> > (meshes[blockIdx.x].faces, mat, len);
 }
+
+void crossProductHOST(Triple<double>& v1, Triple<double>& v2, Triple<double>& res) {
+	res.x = v1.y * v2.z - v1.z * v2.y;
+	res.y = v1.z * v2.x - v1.x * v2.z;
+	res.z = v1.x * v2.y - v1.y * v2.x;
+}
+
+void transformFaceHOST(Face& face, double* mat) {
+	double a, b;
+	a = mat[0] * face.p1.x + mat[1] * face.p1.y + mat[2] * face.p1.z + mat[3];
+	b = mat[4] * face.p1.x + mat[5] * face.p1.y + mat[6] * face.p1.z + mat[7];
+	face.p1.z = mat[8] * face.p1.x + mat[9] * face.p1.y + mat[10] * face.p1.z + mat[11];
+	face.p1.x = a;
+	face.p1.y = b;
+
+	a = mat[0] * face.p2.x + mat[1] * face.p2.y + mat[2] * face.p2.z + mat[3];
+	b = mat[4] * face.p2.x + mat[5] * face.p2.y + mat[6] * face.p2.z + mat[7];
+	face.p2.z = mat[8] * face.p2.x + mat[9] * face.p2.y + mat[10] * face.p2.z + mat[11];
+	face.p2.x = a;
+	face.p2.y = b;
+
+	a = mat[0] * face.p3.x + mat[1] * face.p3.y + mat[2] * face.p3.z + mat[3];
+	b = mat[4] * face.p3.x + mat[5] * face.p3.y + mat[6] * face.p3.z + mat[7];
+	face.p3.z = mat[8] * face.p3.x + mat[9] * face.p3.y + mat[10] * face.p3.z + mat[11];
+	face.p3.x = a;
+	face.p3.y = b;
+
+	Triple<double> v1{face.p2.x - face.p1.x , face.p2.y - face.p1.y , face.p2.z - face.p1.z};
+	Triple<double> v2{face.p3.x - face.p2.x , face.p3.y - face.p2.y , face.p3.z - face.p2.z};
+	crossProductHOST(v1, v2, face.n);
+	a = sqrt(face.n.x * face.n.x + face.n.y * face.n.y + face.n.z * face.n.z);
+	if (a) {
+		face.n.x /= a;
+		face.n.y /= a;
+		face.n.z /= a;
+	}
+}
+
+void transformMeshHOST(Face* faces, unsigned int len, double* mat) {
+	for (unsigned int i = 0; i < len; i++) {
+		transformFaceHOST(faces[i], mat);
+	}
+}

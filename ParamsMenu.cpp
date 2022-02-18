@@ -11,23 +11,43 @@ void paintMenu(HDC hdc, RECT& rect) {
 	Rectangle(hdc, 0, 0, w / 8, h);
 	SetBkColor(hdc, RGB(150, 150, 150));
 
-	if (h < 390)
+	if (h < 510)
 		return;
 
-	TextOut(hdc, 0, 0, TEXT("Pinhole Coordinates:"), 20);
-	TextOut(hdc, 0, 30, TEXT("X:"), 2);
-	TextOut(hdc, 0, 60, TEXT("Y:"), 2);
-	TextOut(hdc, 0, 90, TEXT("Z:"), 2);
+	TextOut(hdc, 0, 0, TEXT("Scene Menu:"), 11);
 
-	TextOut(hdc, 0, 120, TEXT("Image Dimensions:"), 17);
-	TextOut(hdc, 0, 150, TEXT("Width:"), 6);
-	TextOut(hdc, 0, 180, TEXT("Height:"), 7);
+	TextOut(hdc, 0, 90, TEXT("Pinhole Coordinates:"), 20);
+	TextOut(hdc, 0, 120, TEXT("X:"), 2);
+	TextOut(hdc, 0, 150, TEXT("Y:"), 2);
+	TextOut(hdc, 0, 180, TEXT("Z:"), 2);
 
-	TextOut(hdc, 0, 210, TEXT("Sensor Dimensions:"), 18);
+	TextOut(hdc, 0, 210, TEXT("Image Dimensions:"), 17);
 	TextOut(hdc, 0, 240, TEXT("Width:"), 6);
 	TextOut(hdc, 0, 270, TEXT("Height:"), 7);
 
-	TextOut(hdc, 0, 300, TEXT("Ray Tracing Parameters:"), 23);
-	TextOut(hdc, 0, 330, TEXT("sqrt(Rays/Pixel):"), 17);
-	TextOut(hdc, 0, 360, TEXT("Reflections/Ray:"), 16);
+	TextOut(hdc, 0, 300, TEXT("Sensor Dimensions:"), 18);
+	TextOut(hdc, 0, 330, TEXT("Width:"), 6);
+	TextOut(hdc, 0, 360, TEXT("Height:"), 7);
+
+	TextOut(hdc, 0, 390, TEXT("Ray Tracing Parameters:"), 23);
+	TextOut(hdc, 0, 420, TEXT("sqrt(Rays/Pixel):"), 17);
+	TextOut(hdc, 0, 450, TEXT("Reflections/Ray:"), 16);
+}
+
+void addParamWindows(std::vector<HWND>& hWindows, HINSTANCE& hInstance) {
+	//Scene Menu
+	hWindows.push_back(CreateWindow(TEXT("BUTTON"), TEXT("Add Standard Prism"), WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 50, 30, 150, 20, hWindows[0], (HMENU)0, hInstance, NULL));
+	hWindows.push_back(CreateWindow(TEXT("BUTTON"), TEXT("Add Standard Plate"), WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 50, 60, 150, 20, hWindows[0], (HMENU)1, hInstance, NULL));
+
+	//Pinhole Parameter Menu
+	hWindows.push_back(CreateWindow(TEXT("edit"), NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 150, 120, 100, 20, hWindows[0], (HMENU)ID_EDIT, hInstance, NULL));
+	hWindows.push_back(CreateWindow(TEXT("edit"), NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 150, 150, 100, 20, hWindows[0], (HMENU)ID_EDIT, hInstance, NULL));
+	hWindows.push_back(CreateWindow(TEXT("edit"), NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 150, 180, 100, 20, hWindows[0], (HMENU)ID_EDIT, hInstance, NULL));
+	hWindows.push_back(CreateWindow(TEXT("edit"), NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 150, 210, 100, 20, hWindows[0], (HMENU)ID_EDIT, hInstance, NULL));
+	hWindows.push_back(CreateWindow(TEXT("edit"), NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 150, 240, 100, 20, hWindows[0], (HMENU)ID_EDIT, hInstance, NULL));
+	hWindows.push_back(CreateWindow(TEXT("edit"), NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 150, 270, 100, 20, hWindows[0], (HMENU)ID_EDIT, hInstance, NULL));
+	hWindows.push_back(CreateWindow(TEXT("edit"), NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 150, 300, 100, 20, hWindows[0], (HMENU)ID_EDIT, hInstance, NULL));
+	hWindows.push_back(CreateWindow(TEXT("edit"), NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 150, 420, 100, 20, hWindows[0], (HMENU)ID_EDIT, hInstance, NULL));
+	hWindows.push_back(CreateWindow(TEXT("edit"), NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 150, 450, 100, 20, hWindows[0], (HMENU)ID_EDIT, hInstance, NULL));
+	hWindows.push_back(CreateWindow(TEXT("BUTTON"), TEXT("SUBMIT"), WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 50, 480, 100, 20, hWindows[0], (HMENU)3, hInstance, NULL));
 }

@@ -3,6 +3,7 @@
 #include <math.h>
 #include <limits>
 #include <vector>
+#include <windows.h>
 
 constexpr unsigned int STEPS = 100;
 constexpr unsigned int MIN_WAVELENGTH = 350;
@@ -29,7 +30,10 @@ struct Face {
 	Triple<double> p2;
 	Triple<double> p3;
 	Triple<double> n;
-	double* spd;
+	union {
+		double* spd;
+		unsigned int spdIndex;
+	};
 };
 
 struct Mesh {

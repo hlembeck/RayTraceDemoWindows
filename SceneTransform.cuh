@@ -8,3 +8,5 @@ double* getRotateTransform(Triple<double>& v, double a, cudaError_t& cudaStatus)
 
 //Kernel for scene transform with respect to a transformation matrix.
 __global__ void transformMeshes(Mesh* meshes, double* mat);
+
+void transformMeshHOST(Face* faces, unsigned int len, double* mat);

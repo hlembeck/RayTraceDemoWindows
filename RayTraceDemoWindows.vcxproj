@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -13,7 +13,9 @@
   <ItemGroup>
     <ClInclude Include="BasicTypes.h" />
     <ClInclude Include="ColorModel.cuh" />
+    <ClInclude Include="Diagnostics.h" />
     <ClInclude Include="lodepng.h" />
+    <ClInclude Include="MatrixWindow.h" />
     <ClInclude Include="ParamsMenu.h" />
     <ClInclude Include="RayTrace.cuh" />
     <ClInclude Include="RayTraceDemoWindows.h" />
@@ -33,7 +35,9 @@
     <CudaCompile Include="StandardMesh.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Diagnostics.cpp" />
     <ClCompile Include="lodepng.cpp" />
+    <ClCompile Include="MatrixWindow.cpp" />
     <ClCompile Include="ParamsMenu.cpp" />
     <ClCompile Include="RayTraceDemoWindows.cpp" />
     <ClCompile Include="pngIO.cpp" />

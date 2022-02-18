@@ -87,6 +87,10 @@
     <ClInclude Include="ParamsMenu.h">
       <Filter>Windows\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Diagnostics.h" />
+    <ClInclude Include="MatrixWindow.h">
+      <Filter>Windows\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="ColorModel.cu">
@@ -119,6 +123,10 @@
       <Filter>File IO\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ParamsMenu.cpp">
+      <Filter>Windows\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Diagnostics.cpp" />
+    <ClCompile Include="MatrixWindow.cpp">
       <Filter>Windows\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
