@@ -55,3 +55,8 @@ struct IntersectionData {
 	double* spectrum;
 	double angle;
 };
+
+struct windowInfo {
+	HWND hwnd;
+	std::vector<HWND>& children;
+};

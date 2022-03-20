@@ -14,7 +14,6 @@ LRESULT CALLBACK DiagWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	static unsigned int scrollPosition = 0;
 	switch (message) {
 	case WM_CREATE:
-		//sampleColors.push_back(*(COLORREF*)(((CREATESTRUCT*)lParam)->lpCreateParams));
 		return 0;
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);

@@ -6,6 +6,7 @@ IMPORTANT: Uses printf, must be changed for windows application (alternatively, 
 */
 __global__ void printSamples(double* samples, unsigned int len);
 __global__ void printRays(Ray* rays, unsigned int len);
+__global__ void printFaces(Face* faces, unsigned int len);
 
 __global__ void generateRaysPinhole(Ray* rays, Triple<double> pinhole, double top, double left, double pixelSize, double raySpace, unsigned int width, unsigned int height, unsigned int nRays);
 

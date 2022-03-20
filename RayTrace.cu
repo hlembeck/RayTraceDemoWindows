@@ -3,7 +3,7 @@
 //store v*w in v
 __device__ void cross(Triple<double>& v, Triple<double>& w) {
 	double a, b;
-	a = v.y * w.z - w.z * v.y;
+	a = v.y * w.z - v.z * w.y;
 	b = v.z * w.x - v.x * w.z;
 	v.z = v.x * w.y - v.y * w.x;
 	v.x = a;
@@ -30,10 +30,20 @@ __global__ void printRays(Ray* rays, unsigned int len) {
 	}
 }
 
+__global__ void printFaces(Face* faces, unsigned int len) {
+	for (unsigned int i = 0; i < len; i++) {
+		printf("(%d) Points:\n", i);
+		printf(" %g %g %g\n", faces[i].p1.x, faces[i].p1.y, faces[i].p1.z);
+		printf(" %g %g %g\n", faces[i].p2.x, faces[i].p2.y, faces[i].p2.z);
+		printf(" %g %g %g\n", faces[i].p3.x, faces[i].p3.y, faces[i].p3.z);
+		printf(" Normal: %g %g %g\n\n", faces[i].n.x, faces[i].n.y, faces[i].n.z);
+	}
+}
+
 __global__ void generateRaysPinhole(Ray* rays, Triple<double> pinhole, double top, double left, double pixelSize, double raySpace, unsigned int width, unsigned int height, unsigned int nRays) {
 	unsigned int index = (blockIdx.x * width + blockIdx.y) * nRays * nRays + threadIdx.x * nRays + threadIdx.y;
 	double x = left + blockIdx.y * pixelSize + (threadIdx.y + 0.5) * raySpace;
-	double y = left + blockIdx.x * pixelSize + (threadIdx.x + 0.5) * raySpace;
+	double y = top - blockIdx.x * pixelSize - (threadIdx.x + 0.5) * raySpace;
 	rays[index].o.x = x;
 	rays[index].o.y = y;
 	rays[index].o.z = 0.0;
@@ -69,7 +79,7 @@ __global__ void testFaces(Ray& ray, Face* faces, unsigned int len, double* times
 	unsigned int index = blockIdx.x * 512 + threadIdx.x;
 	if (index < len) {
 		double time = timeOfIntersection(ray, faces[index]);
-		if (time <= 0.0) {
+		if (time <= 1.0) {
 			times[index] = DBL_MAX;
 			return;
 		}
@@ -77,11 +87,14 @@ __global__ void testFaces(Ray& ray, Face* faces, unsigned int len, double* times
 		Triple<double> b = { ray.o.x + time * ray.d.x - faces[index].p2.x , ray.o.y + time * ray.d.y - faces[index].p2.y , ray.o.z + time * ray.d.z - faces[index].p2.z };
 		Triple<double> c = { ray.o.x + time * ray.d.x - faces[index].p3.x , ray.o.y + time * ray.d.y - faces[index].p3.y , ray.o.z + time * ray.d.z - faces[index].p3.z };
 		Triple<double> temp = a;
+
 		cross(temp, b);
 		cross(b, c);
 		cross(c, a);
+
 		double d = dot(temp, b), e = dot(b, c), f = dot(c, temp);
-		if (d < 0.0 || e < 0.0 || f < 0.0) {
+
+		if (d < 0 || e < 0 || f < 0) {
 			times[index] = DBL_MAX;
 			return;
 		}
@@ -121,16 +134,12 @@ __global__ void traceRays(Ray* rays, Face* faces, unsigned int numFaces, Interse
 
 __global__ void addToSample(double angle, double* spectrum, double* sample) {
 	if (angle < 0.0) {
-		//printf("test %f\n", spectrum[threadIdx.x] * angle);
 		sample[threadIdx.x] -= spectrum[threadIdx.x] * angle;
 	}
 }
 
 __global__ void computeSamples(IntersectionData* data, double* samples, unsigned int width, unsigned int nRays, unsigned int nReflections) {
 	unsigned int index = (blockIdx.x * width + blockIdx.y) * nRays * nRays + threadIdx.x * nRays + threadIdx.y;
-	//samples[index] = new double[STEPS];
-	/*if (blockIdx.x * WIDTH + blockIdx.y == WIDTH * HEIGHT/2 - 1)
-		printf("index: %p\n", samples[index]);*/
 	memset(&samples[STEPS * index], 0, sizeof(double) * STEPS);
 	for (unsigned int i = 0; i < nReflections; i++) {
 		addToSample << <1, STEPS >> > (data[index * nReflections + i].angle, data[index * nReflections + i].spectrum, &samples[STEPS * index]);
@@ -139,7 +148,6 @@ __global__ void computeSamples(IntersectionData* data, double* samples, unsigned
 }
 
 __global__ void addToPixel(double* sample, double* pixel, unsigned int nRays) {
-	//pixel[threadIdx.x] = 0.0;
 	pixel[threadIdx.x] += sample[threadIdx.x] / (nRays * nRays);
 }
 

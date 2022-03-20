@@ -294,8 +294,8 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 	//Front face
 	face = {
 		{1.0,-1.0,1.0},
-		{-1.0,1.0,1.0},
 		{1.0,1.0,1.0},
+		{-1.0,1.0,1.0},
 		{0.0,0.0,1.0},
 	};
 	face.spdIndex = spectrum;
@@ -303,8 +303,8 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 
 	face = {
 		{1.0,-1.0,1.0},
-		{-1.0,-1.0,1.0},
 		{-1.0,1.0,1.0},
+		{-1.0,-1.0,1.0},
 		{0.0,0.0,1.0},
 	};
 	face.spdIndex = spectrum;
@@ -379,8 +379,8 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 
 	face = {
 		{-1.0,-1.0,-1.0},
+		{-1.0,-1.0,1.0},
 		{-1.0,1.0,1.0},
-		{-1.0,1.0,-1.0},
 		{-1.0,0.0,0.0},
 	};
 	face.spdIndex = spectrum;

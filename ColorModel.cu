@@ -34,13 +34,17 @@ __global__ void getRGB(double* xyzPixels, unsigned char* rgbPixels, unsigned int
 	unsigned int index = blockIdx.x * width + blockIdx.y;
 	switch (threadIdx.x) {
 	case 0:
+		//Red
 		rgbPixels[4 * index] = (unsigned char)min(255.0, 255.0 * (0.41847 * xyzPixels[3 * index] - 0.15866 * xyzPixels[3 * index + 1] - 0.082835 * xyzPixels[3 * index + 2]));
 		break;
 	case 1:
+		//Green
 		rgbPixels[4 * index + 1] = (unsigned char)min(255.0, 255.0 * (-0.091169 * xyzPixels[3 * index] + 0.25243 * xyzPixels[3 * index + 1] + 0.015708 * xyzPixels[3 * index + 2]));
 		break;
 	case 2:
+		//Blue
 		rgbPixels[4 * index + 2] = (unsigned char)min(255.0, 255.0 * (0.00092090 * xyzPixels[3 * index] - 0.0025498 * xyzPixels[3 * index + 1] + 0.17860 * xyzPixels[3 * index + 2]));
+		//Alpha, 255 for PNG, 0 for DIB (convention)
 		rgbPixels[4 * index + 3] = 255;
 	}
 }

@@ -62,6 +62,8 @@ bool getPinholeImage(RTParams& rtParams) {
 	if (!populateRays(rtParams.params, rays, cudaStatus))
 		goto error;
 
+	//printFaces << <1, 1 >> > (faces, rtParams.sceneParams.faces.size());
+
 	//Populate the intersection data
 	if (!populateIntersectionData(rtParams.params, rays, faces, rtParams.sceneParams.faces.size(), intersectionData, cudaStatus))
 		goto error;
@@ -91,6 +93,7 @@ bool getPinholeImage(RTParams& rtParams) {
 
 	return true;
 error:
+	OutputDebugString(TEXT("(In getPinholeImage()) There was an error.\n"));
 	cudaFree(rays);
 	cudaFree(intersectionData);
 	cudaFree(samples);
@@ -119,7 +122,7 @@ bool populateRays(ImgParamPinhole& params, Ray* &rays, cudaError_t& cudaStatus) 
 }
 
 bool populateIntersectionData(ImgParamPinhole& params, Ray* &rays, Face* faces, unsigned int numFaces, IntersectionData* &intersectionData, cudaError_t& cudaStatus) {
-	cudaStatus = cudaMalloc((void**)&intersectionData, sizeof(IntersectionData) * params.width * params.height * params.nRays * params.nRays * params.nReflections);
+	cudaStatus = cudaMalloc((void**)&intersectionData, sizeof(IntersectionData) * params.width * params.height * params.nRays * params.nRays * (params.nReflections + 1));
 	if (cudaStatus != cudaSuccess) {
 		OutputDebugString(TEXT("(In populateIntersectionData()) Failed malloc of intersectionData.\n"));
 		return false;
@@ -127,8 +130,9 @@ bool populateIntersectionData(ImgParamPinhole& params, Ray* &rays, Face* faces, 
 
 	dim3 numBlocks(params.height, params.width);
 	dim3 numThreadsPerBlock(params.nRays, params.nRays);
-	for (unsigned int i = 0; i < params.nReflections; i++) {
-		traceRays << <numBlocks, numThreadsPerBlock >> > (rays, faces, numFaces, intersectionData + i * sizeof(IntersectionData), params.width, params.nRays, params.nReflections);
+	for (unsigned int i = 0; i < params.nReflections + 1; i++) {
+		traceRays << <numBlocks, numThreadsPerBlock >> > (rays, faces, numFaces, intersectionData + i * sizeof(IntersectionData), params.width, params.nRays, params.nReflections+1);
+		//printRays << <1, 1 >> > (rays, params.height * params.width * params.nRays * params.nRays);
 		cudaStatus = cudaDeviceSynchronize();
 		if (cudaStatus != cudaSuccess) {
 			TCHAR buf[256] = L"";
@@ -151,12 +155,15 @@ bool populateSamples(ImgParamPinhole& params, IntersectionData* &intersectionDat
 	dim3 numBlocks(params.height, params.width);
 	dim3 numThreadsPerBlock(params.nRays, params.nRays);
 
-	computeSamples << <numBlocks, numThreadsPerBlock >> > (intersectionData, samples, params.width, params.nRays, params.nReflections);
+	computeSamples << <numBlocks, numThreadsPerBlock >> > (intersectionData, samples, params.width, params.nRays, params.nReflections + 1);
 	cudaStatus = cudaDeviceSynchronize();
 	if (cudaStatus != cudaSuccess) {
 		OutputDebugString(TEXT("(In populateSamples()) Failed computeSamples.\n"));
 		return false;
 	}
+
+	//printSamples<<<1,1>>>(samples, params.height * params.width * params.nRays * params.nRays);
+
 	return true;
 }
 
@@ -284,7 +291,7 @@ bool paramsToDevice(SceneParams& sceneParams, double*& spectrums, Face*& faces, 
 		OutputDebugString(TEXT("(In paramsToDevice()) Failed cudaMalloc of spectrums.\n"));
 		return false;
 	}
-	cudaStatus = cudaMemcpy(spectrums, &sceneParams.spectrums[0], sizeof(double) * sceneParams.spectrums.size(), cudaMemcpyHostToDevice);
+	cudaStatus = cudaMemcpy(spectrums, sceneParams.spectrums.data(), sizeof(double) * sceneParams.spectrums.size(), cudaMemcpyHostToDevice);
 	if (cudaStatus != cudaSuccess) {
 		OutputDebugString(TEXT("(In paramsToDevice()) Failed cudaMemcpy of spectrums.\n"));
 		return false;
@@ -295,11 +302,12 @@ bool paramsToDevice(SceneParams& sceneParams, double*& spectrums, Face*& faces, 
 		OutputDebugString(TEXT("(In paramsToDevice()) Failed cudaMalloc of faces.\n"));
 		return false;
 	}
-	cudaStatus = cudaMemcpy(faces, &sceneParams.faces[0], sizeof(Face) * sceneParams.faces.size(), cudaMemcpyHostToDevice);
+	cudaStatus = cudaMemcpy(faces, sceneParams.faces.data(), sizeof(Face) * sceneParams.faces.size(), cudaMemcpyHostToDevice);
 	if (cudaStatus != cudaSuccess) {
 		OutputDebugString(TEXT("(In paramsToDevice()) Failed cudaMemcpy of faces.\n"));
 		return false;
 	}
+
 	numBlocks = (sceneParams.faces.size() & 511 ? (sceneParams.faces.size() >> 9) + 1 : (sceneParams.faces.size() >> 9));
 	setSpectrums << <numBlocks, 512 >> > (faces, sceneParams.faces.size(), spectrums);
 	cudaStatus = cudaDeviceSynchronize();
@@ -313,10 +321,11 @@ bool paramsToDevice(SceneParams& sceneParams, double*& spectrums, Face*& faces, 
 		OutputDebugString(TEXT("(In paramsToDevice()) Failed cudaMalloc of meshes.\n"));
 		return false;
 	}
-	cudaStatus = cudaMemcpy(faces, &sceneParams.meshes[0], sizeof(unsigned int) * sceneParams.meshes.size(), cudaMemcpyHostToDevice);
+	cudaStatus = cudaMemcpy(meshes, &sceneParams.meshes[0], sizeof(unsigned int) * sceneParams.meshes.size(), cudaMemcpyHostToDevice);
 	if (cudaStatus != cudaSuccess) {
 		OutputDebugString(TEXT("(In paramsToDevice()) Failed cudaMemcpy of meshes.\n"));
 		return false;
 	}
+
 	return true;
 }
