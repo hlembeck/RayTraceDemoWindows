@@ -18,7 +18,7 @@ void updateState(HWND hWnd) {
 			TEXT("edit"),
 			NULL,
 			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
-			40,
+			50,
 			0,
 			100,
 			25,
@@ -31,8 +31,8 @@ void updateState(HWND hWnd) {
 			TEXT("edit"),
 			NULL,
 			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
-			40,
-			25,
+			50,
+			30,
 			100,
 			25,
 			hWnd,
@@ -44,8 +44,8 @@ void updateState(HWND hWnd) {
 			TEXT("edit"),
 			NULL,
 			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
-			40,
 			50,
+			60,
 			100,
 			25,
 			hWnd,
@@ -57,12 +57,12 @@ void updateState(HWND hWnd) {
 			TEXT("button"),
 			TEXT("Submit"),
 			WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-			40,
-			75,
+			50,
+			90,
 			100,
 			25,
 			hWnd,
-			(HMENU)(transformationMenuID + 3),
+			(HMENU)(transformationMenuID + 7),
 			NULL,
 			NULL
 		));
@@ -72,7 +72,7 @@ void updateState(HWND hWnd) {
 			TEXT("edit"),
 			NULL,
 			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
-			40,
+			50,
 			0,
 			100,
 			25,
@@ -85,8 +85,8 @@ void updateState(HWND hWnd) {
 			TEXT("edit"),
 			NULL,
 			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
-			40,
-			25,
+			50,
+			30,
 			100,
 			25,
 			hWnd,
@@ -98,8 +98,8 @@ void updateState(HWND hWnd) {
 			TEXT("edit"),
 			NULL,
 			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
-			40,
 			50,
+			60,
 			100,
 			25,
 			hWnd,
@@ -111,12 +111,12 @@ void updateState(HWND hWnd) {
 			TEXT("button"),
 			TEXT("Submit"),
 			WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-			40,
-			75,
+			50,
+			90,
 			100,
 			25,
 			hWnd,
-			(HMENU)(transformationMenuID + 3),
+			(HMENU)(transformationMenuID + 7),
 			NULL,
 			NULL
 		));
@@ -127,7 +127,7 @@ void updateState(HWND hWnd) {
 			TEXT("edit"),
 			NULL,
 			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
-			40,
+			50,
 			0,
 			50,
 			25,
@@ -140,7 +140,7 @@ void updateState(HWND hWnd) {
 			TEXT("edit"),
 			NULL,
 			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
-			90,
+			100,
 			0,
 			50,
 			25,
@@ -153,7 +153,7 @@ void updateState(HWND hWnd) {
 			TEXT("edit"),
 			NULL,
 			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
-			140,
+			150,
 			0,
 			50,
 			25,
@@ -168,8 +168,8 @@ void updateState(HWND hWnd) {
 			TEXT("edit"),
 			NULL,
 			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
-			40,
-			25,
+			50,
+			30,
 			50,
 			25,
 			hWnd,
@@ -181,8 +181,8 @@ void updateState(HWND hWnd) {
 			TEXT("edit"),
 			NULL,
 			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
-			90,
-			25,
+			100,
+			30,
 			50,
 			25,
 			hWnd,
@@ -194,8 +194,8 @@ void updateState(HWND hWnd) {
 			TEXT("edit"),
 			NULL,
 			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
-			140,
-			25,
+			150,
+			30,
 			50,
 			25,
 			hWnd,
@@ -209,8 +209,8 @@ void updateState(HWND hWnd) {
 			TEXT("edit"),
 			NULL,
 			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
-			40,
 			50,
+			60,
 			150,
 			25,
 			hWnd,
@@ -224,8 +224,8 @@ void updateState(HWND hWnd) {
 			TEXT("button"),
 			TEXT("Submit"),
 			WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-			40,
-			75,
+			50,
+			90,
 			150,
 			25,
 			hWnd,
@@ -251,8 +251,19 @@ LRESULT CALLBACK TransformationWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 		switch (state) {
 		case 0:
 			TextOut(hdc, 0, 0, L"X:", 2);
-			TextOut(hdc, 0, 25, L"Y:", 2);
-			TextOut(hdc, 0, 50, L"Z:", 2);
+			TextOut(hdc, 0, 30, L"Y:", 2);
+			TextOut(hdc, 0, 60, L"Z:", 2);
+			break;
+		case 1:
+			TextOut(hdc, 0, 0, L"X:", 2);
+			TextOut(hdc, 0, 30, L"Y:", 2);
+			TextOut(hdc, 0, 60, L"Z:", 2);
+			break;
+		case 2:
+			TextOut(hdc, 0, 0, L"Point:", 6);
+			TextOut(hdc, 0, 30, L"Vector:", 7);
+			TextOut(hdc, 0, 60, L"Angle:", 6);
+			break;
 		}
 		EndPaint(hWnd, &ps);
 		return 0;
@@ -290,6 +301,8 @@ LRESULT CALLBACK TransformationWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 			//Matrix
 			case transformationMenuID + 3:
 				PostMessage(hMainWnd, AppMsg_TransformationWindow, 3, 0);
+				return 0;
+			case transformationMenuID + 7:
 				return 0;
 			}
 		}
