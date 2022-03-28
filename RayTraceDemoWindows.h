@@ -8,3 +8,4 @@
 #include "StandardMesh.cuh"
 #include "Diagnostics.h"
 #include "MatrixWindow.h"
+#include "TransformationWindow.h"

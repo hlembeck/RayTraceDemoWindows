@@ -25,6 +25,7 @@
     <ClInclude Include="Spectrum.cuh" />
     <ClInclude Include="StandardMesh.cuh" />
     <ClInclude Include="pngIO.h" />
+    <ClInclude Include="TransformationWindow.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="ColorModel.cu" />
@@ -41,6 +42,7 @@
     <ClCompile Include="ParamsMenu.cpp" />
     <ClCompile Include="RayTraceDemoWindows.cpp" />
     <ClCompile Include="pngIO.cpp" />
+    <ClCompile Include="TransformationWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="RayTraceDemoWindows.rc" />

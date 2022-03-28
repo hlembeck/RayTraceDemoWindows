@@ -3,6 +3,7 @@
 #define AppMsg_TFINISH WM_APP
 
 //Declarations of functions
+bool initializeWindows(HINSTANCE hInstance, int nShowCmd);
 void spectrumFromRGB(COLORREF rgbColor, std::vector<double>& spectrums);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 DWORD WINAPI ThreadProcRT(LPVOID lpParameter);
@@ -22,68 +23,19 @@ static std::vector<HWND> hWindows;
 static HWND diagnosticWnd = 0;
 static std::vector<windowInfo> windowManager;
 
+inline void popWindow() {
+	for (int i = 0; i < windowManager.back().children.size(); i++) {
+		DestroyWindow(windowManager.back().children[i]);
+	}
+	windowManager.back().children.clear();
+	windowManager.pop_back();
+}
+
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd) {
-	static TCHAR szAppName[] = TEXT("Ray Tracing Demo");
 	MSG msg = {};
 
-	WNDCLASS baseWndClass = {
-		CS_HREDRAW | CS_VREDRAW,
-		WndProc,
-		0,
-		0,
-		hInstance,
-		NULL,
-		LoadCursor(NULL, IDC_ARROW),
-		(HBRUSH)GetStockObject(WHITE_BRUSH),
-		NULL,
-		szAppName};
-	if (!RegisterClass(&baseWndClass)) {
-		MessageBox(NULL, TEXT("Could not register the base window class."), szAppName, MB_ICONERROR);
-		return -1;
-	}
-
-	WNDCLASS diagnosticWndClass = {
-		CS_HREDRAW | CS_VREDRAW,
-		DiagWndProc,
-		0,
-		0,
-		hInstance,
-		NULL,
-		LoadCursor(NULL, IDC_ARROW),
-		(HBRUSH)GetStockObject(WHITE_BRUSH),
-		NULL,
-		szDiagName
-	};
-	if (!RegisterClass(&diagnosticWndClass)) {
-		MessageBox(NULL, TEXT("Could not register the diagnostics window class."), szDiagName, MB_ICONERROR);
-		return -1;
-	}
-
-	WNDCLASS matrixWndClass = {
-		CS_HREDRAW | CS_VREDRAW,
-		MatrixWndProc,
-		0,
-		0,
-		hInstance,
-		NULL,
-		LoadCursor(NULL,IDC_ARROW),
-		(HBRUSH)GetStockObject(WHITE_BRUSH),
-		NULL,
-		szMatrixName
-	};
-	if (!RegisterClass(&matrixWndClass)) {
-		MessageBox(NULL, TEXT("Could not register the matrix window class."), szDiagName, MB_ICONERROR);
-		return -1;
-	}
-
-	windowManager.push_back({
-		CreateWindow(szAppName, szAppName, WS_EX_CONTROLPARENT | WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU1)), hInstance, NULL),
-		hWindows
-		});
-	addParamWindows(windowManager[0].hwnd, hWindows, hInstance);
-
-	ShowWindow(windowManager[0].hwnd, nShowCmd);
-	UpdateWindow(windowManager[0].hwnd);
+	if (!initializeWindows(hInstance, nShowCmd))
+		return 1;
 
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
@@ -155,8 +107,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 					NULL
 				};
 				if (ChooseColor(&chooseColorStruct)) {
-
-					windowManager.push_back(createMatrixWindow(hWnd, GetModuleHandle(NULL)));
+					windowManager.push_back(createTransformationWindow(hWnd, GetModuleHandle(NULL)));
 
 					addPrismHOST(sceneParams.faces, transformMatrix, sceneParams.spectrums.size());
 					spectrumFromRGB(chooseColorStruct.rgbResult, sceneParams.spectrums);
@@ -176,8 +127,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 					NULL
 				};
 				if (ChooseColor(&chooseColorStruct)) {
-					windowManager.push_back(createMatrixWindow(hWnd, GetModuleHandle(NULL)));
-
+					windowManager.push_back(createTransformationWindow(hWnd, GetModuleHandle(NULL)));
 					addPlateHOST(sceneParams.faces, transformMatrix,sceneParams.spectrums.size());
 					spectrumFromRGB(chooseColorStruct.rgbResult, sceneParams.spectrums);
 					sceneParams.meshes.push_back(sceneParams.faces.size());
@@ -221,7 +171,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		}
 		return 0;
 	case AppMsg_MatrixWindow:
-		windowManager.pop_back();
+		popWindow();
 		if (sceneParams.meshes.size() < 2)
 			transformMeshHOST(sceneParams.faces.data(), sceneParams.meshes.back(), (double*)wParam);
 		else {
@@ -234,8 +184,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			ShowWindow(diagnosticWnd, SW_SHOW);
 		}
 		SendMessage(diagnosticWnd, AppMsg_UpdateDiag, (WPARAM)&sceneParams, (LPARAM)&chooseColorStruct.rgbResult);
-
-		
+		return 0;
+	case AppMsg_TransformationWindow:
+		switch (wParam) {
+		case 0:
+			SendMessage(windowManager.back().hwnd, WM_CLOSE, 0, 0);
+			popWindow();
+			//windowManager.push_back(createTranslateWindow(windowManager[0].hwnd, GetModuleHandle(NULL)));
+			break;
+		case 1:
+			SendMessage(windowManager.back().hwnd, WM_CLOSE, 0, 0);
+			popWindow();
+			//windowManager.push_back(createScaleWindow(windowManager[0].hwnd, GetModuleHandle(NULL)));
+			break;
+		case 2:
+			SendMessage(windowManager.back().hwnd, WM_CLOSE, 0, 0);
+			popWindow();
+			//windowManager.push_back(createRotateWindow(windowManager[0].hwnd, GetModuleHandle(NULL)));
+			break;
+		case 3:
+			SendMessage(windowManager.back().hwnd, WM_CLOSE, 0, 0);
+			windowManager.back().children.clear();
+			popWindow();
+			windowManager.push_back(createMatrixWindow(windowManager[0].hwnd, GetModuleHandle(NULL)));
+		}
 		return 0;
 	case AppMsg_TFINISH:
 		WaitForSingleObject(hThread, INFINITE);
@@ -256,6 +228,89 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		return 0;
 	}
 	return DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+bool initializeWindows(HINSTANCE hInstance, int nShowCmd) {
+	TCHAR szAppName[] = TEXT("Ray Tracing Demo");
+	HBRUSH hBrush = (HBRUSH)GetStockObject(WHITE_BRUSH);
+	//Main window class. Used for displaying initial menu and RT-generated bitmaps
+	WNDCLASS baseWndClass = {
+		CS_HREDRAW | CS_VREDRAW,
+		WndProc,
+		0,
+		0,
+		hInstance,
+		NULL,
+		LoadCursor(NULL, IDC_ARROW),
+		hBrush,
+		NULL,
+		szAppName };
+	if (!RegisterClass(&baseWndClass)) {
+		MessageBox(NULL, TEXT("Could not register the base window class."), szAppName, MB_ICONERROR);
+		return -1;
+	}
+
+	//Diagnostic window class. Used for displaying mesh information
+	WNDCLASS diagnosticWndClass = {
+		CS_HREDRAW | CS_VREDRAW,
+		DiagWndProc,
+		0,
+		0,
+		hInstance,
+		NULL,
+		LoadCursor(NULL, IDC_ARROW),
+		hBrush,
+		NULL,
+		szDiagName
+	};
+	if (!RegisterClass(&diagnosticWndClass)) {
+		MessageBox(NULL, TEXT("Could not register the diagnostics window class."), szDiagName, MB_ICONERROR);
+		return -1;
+	}
+
+	//Transformation window class. Used when the user wishes to transform parts of the scene.
+	WNDCLASS transformationWndClass = {
+		CS_HREDRAW | CS_VREDRAW,
+		TransformationWndProc,
+		0,
+		0,
+		hInstance,
+		NULL,
+		LoadCursor(NULL, IDC_ARROW),
+		hBrush,
+		NULL,
+		szTransformationWndName
+	};
+	if (!RegisterClass(&transformationWndClass)) {
+		MessageBox(NULL, TEXT("Could not register the transformation window class."), szDiagName, MB_ICONERROR);
+		return -1;
+	}
+
+	WNDCLASS matrixWndClass = {
+		CS_HREDRAW | CS_VREDRAW,
+		MatrixWndProc,
+		0,
+		0,
+		hInstance,
+		NULL,
+		LoadCursor(NULL,IDC_ARROW),
+		hBrush,
+		NULL,
+		szMatrixName
+	};
+	if (!RegisterClass(&matrixWndClass)) {
+		MessageBox(NULL, TEXT("Could not register the matrix window class."), szDiagName, MB_ICONERROR);
+		return -1;
+	}
+
+	windowManager.push_back({
+		CreateWindow(szAppName, szAppName, WS_EX_CONTROLPARENT | WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU1)), hInstance, NULL),
+		hWindows
+		});
+	addParamWindows(windowManager[0].hwnd, hWindows, hInstance);
+
+	ShowWindow(windowManager[0].hwnd, nShowCmd);
+	UpdateWindow(windowManager[0].hwnd);
 }
 
 void printImgParamPinhole(ImgParamPinhole& params) {
@@ -317,36 +372,26 @@ void deleteSceneParams() {
 }
 
 bool displayImage(unsigned char* rgbQuadArr, unsigned int cx, unsigned int cy) {
+	RECT clientRect = {};
 	HDC hdcMem = CreateCompatibleDC(NULL);
 	HDC hdcClient = GetDC(windowManager[0].hwnd);
-	//RGBQUAD *testPixels = new RGBQUAD[256*256];
-	//unsigned char* testPixels = new unsigned char[256 * 256 * 4];
-	//memset(testPixels, 0, 1024*256);
-	//for (unsigned int i = 0; i < 256; i++) {
-	//	//testPixels[257*i] = {255,0,0,0};
-	//	testPixels[257 * 4 * i] = 255;
-	//	testPixels[257 * 4 * i + 1] = 0;
-	//	testPixels[257 * 4 * i + 2] = 0;
-	//	testPixels[257 * 4 * i + 3] = 0;
-	//}
 	HBITMAP hBitmap = CreateBitmap(cx, cy, 1, 32, rgbQuadArr);
 
+	GetClientRect(windowManager[0].hwnd, &clientRect);
 	if (!SelectObject(hdcMem, hBitmap)) {
 		goto error;
 		printf("failed selectobject()\n");
 	}
-	if (!BitBlt(hdcClient, 0, 0, cx, cy, hdcMem, 0, 0, SRCCOPY)) {
+	if (!BitBlt(hdcClient, (clientRect.right-clientRect.left)/8, 0, cx, cy, hdcMem, 0, 0, SRCCOPY)) {
 		goto error;
 		printf("failed bitblt()\n");
 	}
 
-	//delete[] testPixels;
 	ReleaseDC(windowManager[0].hwnd, hdcClient);
 	DeleteDC(hdcMem);
 	DeleteObject(hBitmap);
 	return true;
 error:
-	//delete[] testPixels;
 	ReleaseDC(windowManager[0].hwnd, hdcClient);
 	DeleteDC(hdcMem);
 	DeleteObject(hBitmap);

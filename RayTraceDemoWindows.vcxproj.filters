@@ -87,8 +87,13 @@
     <ClInclude Include="ParamsMenu.h">
       <Filter>Windows\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Diagnostics.h" />
     <ClInclude Include="MatrixWindow.h">
+      <Filter>Windows\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransformationWindow.h">
+      <Filter>Windows\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Diagnostics.h">
       <Filter>Windows\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -125,8 +130,13 @@
     <ClCompile Include="ParamsMenu.cpp">
       <Filter>Windows\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Diagnostics.cpp" />
     <ClCompile Include="MatrixWindow.cpp">
+      <Filter>Windows\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TransformationWindow.cpp">
+      <Filter>Windows\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Diagnostics.cpp">
       <Filter>Windows\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
