@@ -75,6 +75,28 @@ double* getRotateTransform(Triple<double>& v, double a, cudaError_t& cudaStatus)
 	return ret;
 }
 
+double* getRotateTransformHOST(Triple<double>& v, double a) {
+	double* ret = new double[16];
+	double c, s;
+	c = cos(a);
+	s = sin(a);
+	memset(ret, 0, sizeof(double) * 15);
+	ret[0] = v.x * v.x + (1 - v.x * v.x) * c;
+	ret[1] = v.x * v.y * (1 - c) - v.z * s;
+	ret[2] = v.x * v.z * (1 - c) + v.y * s;
+
+	ret[4] = v.y * v.x * (1 - c) + v.z * s;
+	ret[5] = v.y * v.y + (1 - v.y * v.y) * c;
+	ret[6] = v.y * v.z * (1 - c) - v.x * s;
+
+	ret[8] = v.z * v.x * (1 - c) - v.y * s;
+	ret[9] = v.z * v.y * (1 - c) + v.x * s;
+	ret[10] = v.z * v.z + (1 - v.z * v.z) * c;
+
+	ret[15] = 1;
+	return ret;
+}
+
 __device__ void transformPoint(Triple<double>& p, double* mat) {
 	double a;
 	double b;

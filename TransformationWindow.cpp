@@ -122,7 +122,7 @@ void updateState(HWND hWnd) {
 		));
 		return;
 	case 2:
-		//Point
+		//Vector
 		transformWindows.push_back(CreateWindow(
 			TEXT("edit"),
 			NULL,
@@ -163,58 +163,17 @@ void updateState(HWND hWnd) {
 			NULL
 		));
 
-		//Vector
-		transformWindows.push_back(CreateWindow(
-			TEXT("edit"),
-			NULL,
-			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
-			50,
-			30,
-			50,
-			25,
-			hWnd,
-			(HMENU)(transformationMenuID + 3),
-			NULL,
-			NULL
-		));
-		transformWindows.push_back(CreateWindow(
-			TEXT("edit"),
-			NULL,
-			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
-			100,
-			30,
-			50,
-			25,
-			hWnd,
-			(HMENU)(transformationMenuID + 4),
-			NULL,
-			NULL
-		));
-		transformWindows.push_back(CreateWindow(
-			TEXT("edit"),
-			NULL,
-			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
-			150,
-			30,
-			50,
-			25,
-			hWnd,
-			(HMENU)(transformationMenuID + 5),
-			NULL,
-			NULL
-		));
-
 		//Angle
 		transformWindows.push_back(CreateWindow(
 			TEXT("edit"),
 			NULL,
 			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
 			50,
-			60,
+			30,
 			150,
 			25,
 			hWnd,
-			(HMENU)(transformationMenuID + 6),
+			(HMENU)(transformationMenuID + 3),
 			NULL,
 			NULL
 		));
@@ -225,7 +184,7 @@ void updateState(HWND hWnd) {
 			TEXT("Submit"),
 			WS_CHILD | WS_VISIBLE | WS_TABSTOP,
 			50,
-			90,
+			60,
 			150,
 			25,
 			hWnd,
@@ -237,11 +196,41 @@ void updateState(HWND hWnd) {
 	}
 }
 
+Triple<double> getTriple(unsigned int start) {
+	Triple<double> ret = {};
+	TCHAR *buf = new TCHAR[64], *tBuf = buf;
+	int bufIndex = 0;
+	memset(buf, 0, sizeof(TCHAR) * 64);
+	bufIndex += SendMessage(transformWindows[start], WM_GETTEXT, 16, (LPARAM)tBuf) + 1;
+	ret.x = wcstod(tBuf, NULL);
+	tBuf += bufIndex;
+	bufIndex += SendMessage(transformWindows[start + 1], WM_GETTEXT, 16, (LPARAM)tBuf) + 1;
+	ret.y = wcstod(tBuf, NULL);
+	tBuf += bufIndex;
+	SendMessage(transformWindows[start + 2], WM_GETTEXT, 16, (LPARAM)tBuf) + 1;
+	ret.z = wcstod(tBuf, NULL);
+	delete[] buf;
+	return ret;
+}
+
+double getDouble(unsigned int index) {
+	double ret;
+	TCHAR* buf = new TCHAR[16];
+	memset(buf, 0, sizeof(TCHAR) * 16);
+	SendMessage(transformWindows[index], WM_GETTEXT, 16, (LPARAM)buf);
+	ret = wcstod(buf, NULL);
+	delete[] buf;
+	return ret;
+}
+
 LRESULT CALLBACK TransformationWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+	Triple<double> triple;
+	double angle;
+	double* transformMatrix;
 	HDC hdc;
 	PAINTSTRUCT ps;
 	RECT clientRect;
-	int clientHeight, clientWidth;
+	int clientHeight, clientWidth, bufIndex = 0;
 	switch (message) {
 	case WM_CREATE:
 		state = -1;
@@ -261,8 +250,7 @@ LRESULT CALLBACK TransformationWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 			break;
 		case 2:
 			TextOut(hdc, 0, 0, L"Point:", 6);
-			TextOut(hdc, 0, 30, L"Vector:", 7);
-			TextOut(hdc, 0, 60, L"Angle:", 6);
+			TextOut(hdc, 0, 30, L"Angle:", 6);
 			break;
 		}
 		EndPaint(hWnd, &ps);
@@ -302,7 +290,45 @@ LRESULT CALLBACK TransformationWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 			case transformationMenuID + 3:
 				PostMessage(hMainWnd, AppMsg_TransformationWindow, 3, 0);
 				return 0;
+			//Button press
 			case transformationMenuID + 7:
+				switch (state) {
+				case 0:
+					transformMatrix = new double[16];
+					memset(transformMatrix, 0, sizeof(double) * 16);
+					triple = getTriple(0);
+					transformMatrix[0] = 1;
+					transformMatrix[3] = triple.x;
+					transformMatrix[5] = 1;
+					transformMatrix[7] = triple.y;
+					transformMatrix[10] = 1;
+					transformMatrix[11] = triple.z;
+					transformMatrix[15] = 1;
+
+
+					PostMessage(hMainWnd, AppMsg_TransformationWindow + 1, (WPARAM)transformMatrix, NULL);
+
+					break;
+				case 1:
+					transformMatrix = new double[16];
+					memset(transformMatrix, 0, sizeof(double) * 16);
+					triple = getTriple(0);
+					transformMatrix[0] = triple.x;
+					transformMatrix[5] = triple.y;
+					transformMatrix[10] = triple.z;
+					transformMatrix[15] = 1;
+
+					PostMessage(hMainWnd, AppMsg_TransformationWindow + 1, (WPARAM)transformMatrix, NULL);
+
+					break;
+				case 2:
+					printf("test\n");
+					transformMatrix = getRotateTransformHOST(getTriple(0), getDouble(3));
+
+					PostMessage(hMainWnd, AppMsg_TransformationWindow + 1, (WPARAM)transformMatrix, NULL);
+
+					break;
+				}
 				return 0;
 			}
 		}

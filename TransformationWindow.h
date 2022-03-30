@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BasicTypes.h"
+#include "SceneTransform.cuh"
 
 #define AppMsg_TransformationWindow WM_APP + 32
 #define transformationMenuID 256

@@ -28,6 +28,7 @@ inline void popWindow() {
 		DestroyWindow(windowManager.back().children[i]);
 	}
 	windowManager.back().children.clear();
+	DestroyWindow(windowManager.back().hwnd);
 	windowManager.pop_back();
 }
 
@@ -208,6 +209,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			popWindow();
 			windowManager.push_back(createMatrixWindow(windowManager[0].hwnd, GetModuleHandle(NULL)));
 		}
+		return 0;
+	case AppMsg_TransformationWindow + 1:
+		popWindow();
+		if (sceneParams.meshes.size() < 2)
+			transformMeshHOST(sceneParams.faces.data(), sceneParams.meshes.back(), (double*)wParam);
+		else {
+			i = sceneParams.meshes[sceneParams.meshes.size() - 2];
+			transformMeshHOST(&sceneParams.faces[i], sceneParams.meshes.back() - i, (double*)wParam);
+		}
+		delete[] (double*)wParam;
+		if (!IsWindow(diagnosticWnd)) {
+			diagnosticWnd = CreateWindow(szDiagName, szDiagName, WS_OVERLAPPEDWINDOW | WS_VSCROLL, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, GetModuleHandle(NULL), NULL);
+
+			ShowWindow(diagnosticWnd, SW_SHOW);
+		}
+		SendMessage(diagnosticWnd, AppMsg_UpdateDiag, (WPARAM)&sceneParams, (LPARAM)&chooseColorStruct.rgbResult);
 		return 0;
 	case AppMsg_TFINISH:
 		WaitForSingleObject(hThread, INFINITE);
