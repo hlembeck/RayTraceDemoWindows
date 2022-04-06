@@ -68,22 +68,35 @@ bool getPinholeImage(RTParams& rtParams) {
 	if (!populateIntersectionData(rtParams.params, rays, faces, rtParams.sceneParams.faces.size(), intersectionData, cudaStatus))
 		goto error;
 
-	cudaFree(rays);
-	cudaFree(faces);
-	cudaFree(spectrums);
-	cudaFree(meshes);
+	cudaStatus = cudaFree(rays);
+	cudaStatus = cudaFree(faces);
+	cudaStatus = cudaFree(meshes);
+	if (cudaStatus != cudaSuccess) {
+		printf("Error freeing rays, faces, or meshes.\n");
+		goto error;
+	}
+
 
 	//Populate samples with data from intersectionData
 	if (!populateSamples(rtParams.params, intersectionData, samples, cudaStatus))
 		goto error;
 
-	cudaFree(intersectionData);
+	cudaStatus = cudaFree(spectrums);
+	cudaStatus = cudaFree(intersectionData);
+	if (cudaStatus != cudaSuccess) {
+		printf("Failed to free intersectionData or spectrums.\n");
+		goto error;
+	}
 
 	//Populate pixel samples using data from samples
 	if (!populatePixelSamples(rtParams.params, samples, pixelSamples, cudaStatus))
 		goto error;
 
-	cudaFree(samples);
+	cudaStatus = cudaFree(samples);
+	if (cudaStatus != cudaSuccess) {
+		printf("Failed to free samples.\n");
+		goto error;
+	}
 
 	//populate rgbBMP with RGB data from pixelSamples. pixelSamples is freed in this function. rgbBMP is allocated in this function, and must be freed from the heap after painting in window.
 	if (!populateRGBQuadArray(rtParams.params, rtParams.rgbQuadArr, pixelSamples, cudaStatus))
@@ -122,6 +135,7 @@ bool populateRays(ImgParamPinhole& params, Ray* &rays, cudaError_t& cudaStatus) 
 }
 
 bool populateIntersectionData(ImgParamPinhole& params, Ray* &rays, Face* faces, unsigned int numFaces, IntersectionData* &intersectionData, cudaError_t& cudaStatus) {
+	unsigned int planeLength = params.width * params.height * params.nRays * params.nRays;
 	cudaStatus = cudaMalloc((void**)&intersectionData, sizeof(IntersectionData) * params.width * params.height * params.nRays * params.nRays * (params.nReflections + 1));
 	if (cudaStatus != cudaSuccess) {
 		OutputDebugString(TEXT("(In populateIntersectionData()) Failed malloc of intersectionData.\n"));
@@ -131,8 +145,9 @@ bool populateIntersectionData(ImgParamPinhole& params, Ray* &rays, Face* faces, 
 	dim3 numBlocks(params.height, params.width);
 	dim3 numThreadsPerBlock(params.nRays, params.nRays);
 	for (unsigned int i = 0; i < params.nReflections + 1; i++) {
-		traceRays << <numBlocks, numThreadsPerBlock >> > (rays, faces, numFaces, intersectionData + i * sizeof(IntersectionData), params.width, params.nRays, params.nReflections+1);
+		traceRays << <numBlocks, numThreadsPerBlock >> > (rays, faces, numFaces, intersectionData + i, params.width, params.nRays, params.nReflections + 1);
 		//printRays << <1, 1 >> > (rays, params.height * params.width * params.nRays * params.nRays);
+		//printf("\n\n\n\n");
 		cudaStatus = cudaDeviceSynchronize();
 		if (cudaStatus != cudaSuccess) {
 			TCHAR buf[256] = L"";
@@ -142,6 +157,7 @@ bool populateIntersectionData(ImgParamPinhole& params, Ray* &rays, Face* faces, 
 			return false;
 		}
 	}
+	//printIntersectionData<<<1,1>>>(intersectionData, params.width * params.height * params.nRays * params.nRays * (params.nReflections + 1));
 	return true;
 }
 

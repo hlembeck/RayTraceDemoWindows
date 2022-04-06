@@ -40,6 +40,13 @@ __global__ void printFaces(Face* faces, unsigned int len) {
 	}
 }
 
+__global__ void printIntersectionData(IntersectionData* data, unsigned int len) {
+	for (unsigned int i = 0; i < len; i++) {
+		printf("Angle: %g , Spectrum: %p\n", data[i].angle, data[i].spectrum);
+	}
+	printf("\n\n");
+}
+
 __global__ void generateRaysPinhole(Ray* rays, Triple<double> pinhole, double top, double left, double pixelSize, double raySpace, unsigned int width, unsigned int height, unsigned int nRays) {
 	unsigned int index = (blockIdx.x * width + blockIdx.y) * nRays * nRays + threadIdx.x * nRays + threadIdx.y;
 	double x = left + blockIdx.y * pixelSize + (threadIdx.y + 0.5) * raySpace;
@@ -133,17 +140,17 @@ __global__ void traceRays(Ray* rays, Face* faces, unsigned int numFaces, Interse
 }
 
 __global__ void addToSample(double angle, double* spectrum, double* sample) {
-	if (angle < 0.0) {
+	if (angle < 0 && spectrum[threadIdx.x]) {
 		sample[threadIdx.x] -= spectrum[threadIdx.x] * angle;
 	}
 }
 
 __global__ void computeSamples(IntersectionData* data, double* samples, unsigned int width, unsigned int nRays, unsigned int nReflections) {
+	cudaError_t cudaStatus;
 	unsigned int index = (blockIdx.x * width + blockIdx.y) * nRays * nRays + threadIdx.x * nRays + threadIdx.y;
 	memset(&samples[STEPS * index], 0, sizeof(double) * STEPS);
-	for (unsigned int i = 0; i < nReflections; i++) {
+	for (unsigned int i = 0; i < nReflections; i++) { 
 		addToSample << <1, STEPS >> > (data[index * nReflections + i].angle, data[index * nReflections + i].spectrum, &samples[STEPS * index]);
-		cudaDeviceSynchronize();
 	}
 }
 

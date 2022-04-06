@@ -219,12 +219,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			transformMeshHOST(&sceneParams.faces[i], sceneParams.meshes.back() - i, (double*)wParam);
 		}
 		delete[] (double*)wParam;
-		if (!IsWindow(diagnosticWnd)) {
+		windowManager.push_back(createTransformationWindow(hWnd, GetModuleHandle(NULL)));
+		/*if (!IsWindow(diagnosticWnd)) {
 			diagnosticWnd = CreateWindow(szDiagName, szDiagName, WS_OVERLAPPEDWINDOW | WS_VSCROLL, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, GetModuleHandle(NULL), NULL);
 
 			ShowWindow(diagnosticWnd, SW_SHOW);
 		}
-		SendMessage(diagnosticWnd, AppMsg_UpdateDiag, (WPARAM)&sceneParams, (LPARAM)&chooseColorStruct.rgbResult);
+		SendMessage(diagnosticWnd, AppMsg_UpdateDiag, (WPARAM)&sceneParams, (LPARAM)&chooseColorStruct.rgbResult);*/
 		return 0;
 	case AppMsg_TFINISH:
 		WaitForSingleObject(hThread, INFINITE);
@@ -343,12 +344,14 @@ DWORD WINAPI ThreadProcRT(LPVOID lpParameter) {
 	if (!getPinholeImage(*(RTParams*)lpParameter)) {
 		OutputDebugString(TEXT("(In ThreadProcRT()) Failed getPinholeBitmap().\n"));
 		delete[] rgbQuadArr;
+		rgbQuadArr = 0;
 		return 1;
 	}
 
 	if (!displayImage(rgbQuadArr,params.width,params.height)) {
 		OutputDebugString(TEXT("(In ThreadProcRT()) Failed testBitmaps().\n"));
 		delete[] rgbQuadArr;
+		rgbQuadArr = 0;
 		return 1;
 	}
 
@@ -356,10 +359,12 @@ DWORD WINAPI ThreadProcRT(LPVOID lpParameter) {
 	if (!savePNG(rgbQuadArr, params.width, params.height, "image.png")) {
 		OutputDebugString(TEXT("(In ThreadProcRT()) Failed savePNG().\n"));
 		delete[] rgbQuadArr;
+		rgbQuadArr = 0;
 		return 1;
 	}
 
 	delete[] rgbQuadArr;
+	rgbQuadArr = 0;
 	PostMessage(windowManager[0].hwnd, AppMsg_TFINISH, NULL, NULL);
 	return 0;
 }

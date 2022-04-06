@@ -5,7 +5,7 @@
 #include <vector>
 #include <windows.h>
 
-constexpr unsigned int STEPS = 100;
+constexpr unsigned int STEPS = 10;
 constexpr unsigned int MIN_WAVELENGTH = 350;
 constexpr unsigned int MAX_WAVELENGTH = 750;
 

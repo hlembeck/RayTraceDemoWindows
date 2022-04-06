@@ -322,7 +322,6 @@ LRESULT CALLBACK TransformationWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 
 					break;
 				case 2:
-					printf("test\n");
 					transformMatrix = getRotateTransformHOST(getTriple(0), getDouble(3));
 
 					PostMessage(hMainWnd, AppMsg_TransformationWindow + 1, (WPARAM)transformMatrix, NULL);
