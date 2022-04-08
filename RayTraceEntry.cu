@@ -76,7 +76,6 @@ bool getPinholeImage(RTParams& rtParams) {
 		goto error;
 	}
 
-
 	//Populate samples with data from intersectionData
 	if (!populateSamples(rtParams.params, intersectionData, samples, cudaStatus))
 		goto error;
@@ -146,8 +145,6 @@ bool populateIntersectionData(ImgParamPinhole& params, Ray* &rays, Face* faces, 
 	dim3 numThreadsPerBlock(params.nRays, params.nRays);
 	for (unsigned int i = 0; i < params.nReflections + 1; i++) {
 		traceRays << <numBlocks, numThreadsPerBlock >> > (rays, faces, numFaces, intersectionData + i, params.width, params.nRays, params.nReflections + 1);
-		//printRays << <1, 1 >> > (rays, params.height * params.width * params.nRays * params.nRays);
-		//printf("\n\n\n\n");
 		cudaStatus = cudaDeviceSynchronize();
 		if (cudaStatus != cudaSuccess) {
 			TCHAR buf[256] = L"";
@@ -157,7 +154,6 @@ bool populateIntersectionData(ImgParamPinhole& params, Ray* &rays, Face* faces, 
 			return false;
 		}
 	}
-	//printIntersectionData<<<1,1>>>(intersectionData, params.width * params.height * params.nRays * params.nRays * (params.nReflections + 1));
 	return true;
 }
 
@@ -177,9 +173,6 @@ bool populateSamples(ImgParamPinhole& params, IntersectionData* &intersectionDat
 		OutputDebugString(TEXT("(In populateSamples()) Failed computeSamples.\n"));
 		return false;
 	}
-
-	//printSamples<<<1,1>>>(samples, params.height * params.width * params.nRays * params.nRays);
-
 	return true;
 }
 

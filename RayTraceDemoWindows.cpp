@@ -171,7 +171,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			}
 		}
 		return 0;
-	case AppMsg_MatrixWindow:
+	/*case AppMsg_MatrixWindow:
 		popWindow();
 		if (sceneParams.meshes.size() < 2)
 			transformMeshHOST(sceneParams.faces.data(), sceneParams.meshes.back(), (double*)wParam);
@@ -185,7 +185,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			ShowWindow(diagnosticWnd, SW_SHOW);
 		}
 		SendMessage(diagnosticWnd, AppMsg_UpdateDiag, (WPARAM)&sceneParams, (LPARAM)&chooseColorStruct.rgbResult);
-		return 0;
+		return 0;*/
 	case AppMsg_TransformationWindow:
 		switch (wParam) {
 		case 0:
@@ -207,7 +207,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			SendMessage(windowManager.back().hwnd, WM_CLOSE, 0, 0);
 			windowManager.back().children.clear();
 			popWindow();
-			windowManager.push_back(createMatrixWindow(windowManager[0].hwnd, GetModuleHandle(NULL)));
+
+			if (sceneParams.meshes.size() < 2)
+				transformMeshHOST(sceneParams.faces.data(), sceneParams.meshes.back(), (double*)lParam);
+			else {
+				i = sceneParams.meshes[sceneParams.meshes.size() - 2];
+				transformMeshHOST(&sceneParams.faces[i], sceneParams.meshes.back() - i, (double*)lParam);
+			}
+			if (!IsWindow(diagnosticWnd)) {
+				diagnosticWnd = CreateWindow(szDiagName, szDiagName, WS_OVERLAPPEDWINDOW | WS_VSCROLL, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, GetModuleHandle(NULL), NULL);
+
+				ShowWindow(diagnosticWnd, SW_SHOW);
+			}
+			SendMessage(diagnosticWnd, AppMsg_UpdateDiag, (WPARAM)&sceneParams, (LPARAM)&chooseColorStruct.rgbResult);
+
+
+			//windowManager.push_back(createMatrixWindow(windowManager[0].hwnd, GetModuleHandle(NULL)));
 		}
 		return 0;
 	case AppMsg_TransformationWindow + 1:
@@ -220,19 +235,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		}
 		delete[] (double*)wParam;
 		windowManager.push_back(createTransformationWindow(hWnd, GetModuleHandle(NULL)));
-		/*if (!IsWindow(diagnosticWnd)) {
-			diagnosticWnd = CreateWindow(szDiagName, szDiagName, WS_OVERLAPPEDWINDOW | WS_VSCROLL, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, GetModuleHandle(NULL), NULL);
-
-			ShowWindow(diagnosticWnd, SW_SHOW);
-		}
-		SendMessage(diagnosticWnd, AppMsg_UpdateDiag, (WPARAM)&sceneParams, (LPARAM)&chooseColorStruct.rgbResult);*/
 		return 0;
 	case AppMsg_TFINISH:
 		WaitForSingleObject(hThread, INFINITE);
 		exitCode = 0;
 		if (GetExitCodeThread(hThread, &exitCode)) {
 			CloseHandle(hThread);
-			//TODO: Write bitmap image on disk to screen
 		}
 		else
 			CloseHandle(hThread);

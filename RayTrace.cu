@@ -86,7 +86,7 @@ __global__ void testFaces(Ray& ray, Face* faces, unsigned int len, double* times
 	unsigned int index = blockIdx.x * 512 + threadIdx.x;
 	if (index < len) {
 		double time = timeOfIntersection(ray, faces[index]);
-		if (time <= 1.0) {
+		if (time <= 0.0) {
 			times[index] = DBL_MAX;
 			return;
 		}

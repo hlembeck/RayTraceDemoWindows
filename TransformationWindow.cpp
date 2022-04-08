@@ -7,12 +7,71 @@ static std::vector<HWND> transformWindows;
 static int state;
 
 void updateState(HWND hWnd) {
-	DestroyWindow(transformWindows[0]);
-	DestroyWindow(transformWindows[1]);
-	DestroyWindow(transformWindows[2]);
-	DestroyWindow(transformWindows[3]);
+	for (unsigned int i = 0; i < transformWindows.size(); i++) {
+		DestroyWindow(transformWindows[i]);
+	}
 	transformWindows.clear();
 	switch (state) {
+	case -1:
+		transformWindows.push_back(CreateWindow(
+			TEXT("BUTTON"),
+			TEXT("Translate"),
+			WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+			0,
+			0,
+			75,
+			25,
+			hWnd,
+			(HMENU)transformationMenuID,
+			NULL,
+			NULL
+		));
+
+		//Button to display scale menu for the mesh
+		transformWindows.push_back(CreateWindow(
+			TEXT("BUTTON"),
+			TEXT("Scale"),
+			WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+			0,
+			30,
+			75,
+			25,
+			hWnd,
+			(HMENU)(transformationMenuID + 1),
+			NULL,
+			NULL
+		));
+
+		//Button to display rotate menu for the mesh
+		transformWindows.push_back(CreateWindow(
+			TEXT("BUTTON"),
+			TEXT("Rotate"),
+			WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+			0,
+			60,
+			75,
+			25,
+			hWnd,
+			(HMENU)(transformationMenuID + 2),
+			NULL,
+			NULL
+		));
+
+		//Button to display matrix menu for the mesh
+		transformWindows.push_back(CreateWindow(
+			TEXT("BUTTON"),
+			TEXT("Submit"),
+			WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+			0,
+			90,
+			75,
+			25,
+			hWnd,
+			(HMENU)(transformationMenuID + 3),
+			NULL,
+			NULL
+		));
+		return;
 	case 0:
 		transformWindows.push_back(CreateWindow(
 			TEXT("edit"),
@@ -227,13 +286,19 @@ LRESULT CALLBACK TransformationWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 	Triple<double> triple;
 	double angle;
 	double* transformMatrix;
+	static double *finalMatrix;
 	HDC hdc;
 	PAINTSTRUCT ps;
 	RECT clientRect;
 	int clientHeight, clientWidth, bufIndex = 0;
 	switch (message) {
 	case WM_CREATE:
-		state = -1;
+		finalMatrix = new double[16];
+		memset(finalMatrix, 0, sizeof(double) * 16);
+		finalMatrix[0] = 1;
+		finalMatrix[5] = 1;
+		finalMatrix[10] = 1;
+		finalMatrix[15] = 1;
 		break;
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
@@ -286,9 +351,9 @@ LRESULT CALLBACK TransformationWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 				state = 2;
 				updateState(hWnd);
 				return 0;
-			//Matrix
+			//Submit
 			case transformationMenuID + 3:
-				PostMessage(hMainWnd, AppMsg_TransformationWindow, 3, 0);
+				PostMessage(hMainWnd, AppMsg_TransformationWindow, 3, (LPARAM)finalMatrix);
 				return 0;
 			//Button press
 			case transformationMenuID + 7:
@@ -304,10 +369,14 @@ LRESULT CALLBACK TransformationWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 					transformMatrix[10] = 1;
 					transformMatrix[11] = triple.z;
 					transformMatrix[15] = 1;
-
-
-					PostMessage(hMainWnd, AppMsg_TransformationWindow + 1, (WPARAM)transformMatrix, NULL);
-
+					multiply(transformMatrix, finalMatrix);
+					delete[] transformMatrix;
+					state = -1;
+					updateState(hWnd);
+					GetClientRect(hWnd, &clientRect);
+					clientHeight = clientRect.bottom - clientRect.top;
+					clientWidth = clientRect.right - clientRect.left;
+					PostMessage(hWnd, WM_SIZE, 0, (clientRect.right - clientRect.left >> 16) || (clientRect.bottom - clientRect.top));
 					break;
 				case 1:
 					transformMatrix = new double[16];
@@ -317,15 +386,25 @@ LRESULT CALLBACK TransformationWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 					transformMatrix[5] = triple.y;
 					transformMatrix[10] = triple.z;
 					transformMatrix[15] = 1;
-
-					PostMessage(hMainWnd, AppMsg_TransformationWindow + 1, (WPARAM)transformMatrix, NULL);
-
+					multiply(transformMatrix, finalMatrix);
+					delete[] transformMatrix;
+					state = -1;
+					updateState(hWnd);
+					GetClientRect(hWnd, &clientRect);
+					clientHeight = clientRect.bottom - clientRect.top;
+					clientWidth = clientRect.right - clientRect.left;
+					PostMessage(hWnd, WM_SIZE, 0, (clientRect.right - clientRect.left >> 16) || (clientRect.bottom - clientRect.top));
 					break;
 				case 2:
 					transformMatrix = getRotateTransformHOST(getTriple(0), getDouble(3));
-
-					PostMessage(hMainWnd, AppMsg_TransformationWindow + 1, (WPARAM)transformMatrix, NULL);
-
+					multiply(transformMatrix, finalMatrix);
+					delete[] transformMatrix;
+					state = -1;
+					updateState(hWnd);
+					GetClientRect(hWnd, &clientRect);
+					clientHeight = clientRect.bottom - clientRect.top;
+					clientWidth = clientRect.right - clientRect.left;
+					PostMessage(hWnd, WM_SIZE, 0, (clientRect.right - clientRect.left >> 16) || (clientRect.bottom - clientRect.top));
 					break;
 				}
 				return 0;
@@ -353,65 +432,69 @@ windowInfo createTransformationWindow(HWND hWndMain, HINSTANCE hInstacnce) {
 			NULL
 		),
 		transformWindows};
-	//Button to display translate menu for the mesh
-	transformWindows.push_back(CreateWindow(
-		TEXT("BUTTON"),
-		TEXT("Translate"),
-		WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		0,
-		0,
-		75,
-		25,
-		ret.hwnd,
-		(HMENU)transformationMenuID,
-		NULL,
-		NULL
-	));
 
-	//Button to display scale menu for the mesh
-	transformWindows.push_back(CreateWindow(
-		TEXT("BUTTON"),
-		TEXT("Scale"),
-		WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		0,
-		30,
-		75,
-		25,
-		ret.hwnd,
-		(HMENU)(transformationMenuID + 1),
-		NULL,
-		NULL
-	));
+	state = -1;
+	updateState(ret.hwnd);
 
-	//Button to display rotate menu for the mesh
-	transformWindows.push_back(CreateWindow(
-		TEXT("BUTTON"),
-		TEXT("Rotate"),
-		WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		0,
-		60,
-		75,
-		25,
-		ret.hwnd,
-		(HMENU)(transformationMenuID  + 2),
-		NULL,
-		NULL
-	));
+	////Button to display translate menu for the mesh
+	//transformWindows.push_back(CreateWindow(
+	//	TEXT("BUTTON"),
+	//	TEXT("Translate"),
+	//	WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+	//	0,
+	//	0,
+	//	75,
+	//	25,
+	//	ret.hwnd,
+	//	(HMENU)transformationMenuID,
+	//	NULL,
+	//	NULL
+	//));
 
-	//Button to display matrix menu for the mesh
-	transformWindows.push_back(CreateWindow(
-		TEXT("BUTTON"),
-		TEXT("Matrix"),
-		WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-		0,
-		90,
-		75,
-		25,
-		ret.hwnd,
-		(HMENU)(transformationMenuID + 3),
-		NULL,
-		NULL
-	));
+	////Button to display scale menu for the mesh
+	//transformWindows.push_back(CreateWindow(
+	//	TEXT("BUTTON"),
+	//	TEXT("Scale"),
+	//	WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+	//	0,
+	//	30,
+	//	75,
+	//	25,
+	//	ret.hwnd,
+	//	(HMENU)(transformationMenuID + 1),
+	//	NULL,
+	//	NULL
+	//));
+
+	////Button to display rotate menu for the mesh
+	//transformWindows.push_back(CreateWindow(
+	//	TEXT("BUTTON"),
+	//	TEXT("Rotate"),
+	//	WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+	//	0,
+	//	60,
+	//	75,
+	//	25,
+	//	ret.hwnd,
+	//	(HMENU)(transformationMenuID  + 2),
+	//	NULL,
+	//	NULL
+	//));
+
+	////Button to display matrix menu for the mesh
+	//transformWindows.push_back(CreateWindow(
+	//	TEXT("BUTTON"),
+	//	TEXT("Submit"),
+	//	WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+	//	0,
+	//	90,
+	//	75,
+	//	25,
+	//	ret.hwnd,
+	//	(HMENU)(transformationMenuID + 3),
+	//	NULL,
+	//	NULL
+	//));
 
 	ShowWindow(ret.hwnd, SW_SHOW);
 	UpdateWindow(ret.hwnd);
