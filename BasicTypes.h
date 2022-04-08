@@ -49,6 +49,7 @@ struct Scene {
 struct Ray {
 	Triple<double> o;
 	Triple<double> d;
+	int index;
 };
 
 struct IntersectionData {

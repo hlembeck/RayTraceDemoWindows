@@ -153,6 +153,9 @@ bool populateIntersectionData(ImgParamPinhole& params, Ray* &rays, Face* faces, 
 			OutputDebugString(buf);
 			return false;
 		}
+		//printf("\n\n\n");
+		/*printRays << <1, 1 >> > (rays, params.height * params.width * params.nRays * params.nRays);
+		printf("\n\n\n\n");*/
 	}
 	return true;
 }

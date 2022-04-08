@@ -58,6 +58,7 @@ __global__ void generateRaysPinhole(Ray* rays, Triple<double> pinhole, double to
 	rays[index].d.x = pinhole.x - x;
 	rays[index].d.y = pinhole.y - y;
 	rays[index].d.z = pinhole.z;
+	rays[index].index = -1;
 }
 
 __device__ double timeOfIntersection(Ray& ray, Face& face) {
@@ -85,6 +86,11 @@ __device__ unsigned int smallestTime(double* times, unsigned int len) {
 __global__ void testFaces(Ray& ray, Face* faces, unsigned int len, double* times) {
 	unsigned int index = blockIdx.x * 512 + threadIdx.x;
 	if (index < len) {
+		if (ray.index == index) {
+			//printf("test\n");
+			times[index] = DBL_MAX;
+			return;
+		}
 		double time = timeOfIntersection(ray, faces[index]);
 		if (time <= 0.0) {
 			times[index] = DBL_MAX;
@@ -135,6 +141,7 @@ __global__ void traceRays(Ray* rays, Face* faces, unsigned int numFaces, Interse
 		rays[index].d.x -= mag * faces[s].n.x;
 		rays[index].d.y -= mag * faces[s].n.y;
 		rays[index].d.z -= mag * faces[s].n.z;
+		rays[index].index = s;
 	}
 	delete[] times;
 }
