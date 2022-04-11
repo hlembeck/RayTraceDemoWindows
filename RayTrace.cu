@@ -42,7 +42,12 @@ __global__ void printFaces(Face* faces, unsigned int len) {
 
 __global__ void printIntersectionData(IntersectionData* data, unsigned int len) {
 	for (unsigned int i = 0; i < len; i++) {
-		printf("Angle: %g , Spectrum: %p\n", data[i].angle, data[i].spectrum);
+		printf("\nAngle: %g , Spectrum: %p\n", data[i].angle, data[i].spectrum);
+		if (data[i].spectrum) {
+			for (unsigned int j = 0; j < STEPS; j++) {
+				printf("%g ", data[i].spectrum[j]);
+			}
+		}
 	}
 	printf("\n\n");
 }
@@ -131,8 +136,16 @@ __global__ void traceRays(Ray* rays, Face* faces, unsigned int numFaces, Interse
 		rays[index].o.x += rays[index].d.x * times[s];
 		rays[index].o.y += rays[index].d.y * times[s];
 		rays[index].o.z += rays[index].d.z * times[s];
-		data[index * nReflections].spectrum = faces[s].spd;
-		data[index * nReflections].angle = dot(rays[index].d, faces[s].n) / (rays[index].d.x * rays[index].d.x + rays[index].d.y * rays[index].d.y + rays[index].d.z * rays[index].d.z);
+		data[index * nReflections].angle = faces[s].reflectivity * dot(rays[index].d, faces[s].n) / (rays[index].d.x * rays[index].d.x + rays[index].d.y * rays[index].d.y + rays[index].d.z * rays[index].d.z);
+
+		if (data[index * nReflections].angle < 0) {
+			data[index * nReflections].spectrum = faces[s].spd;
+			data[index * nReflections].angle *= -1;
+		}
+		else {
+			data[index * nReflections].spectrum = faces[s].spdBack;
+		}
+
 		double mag = rays[index].d.x * rays[index].d.x + rays[index].d.y * rays[index].d.y + rays[index].d.z * rays[index].d.z;
 		rays[index].d.x = rays[index].d.x / mag;
 		rays[index].d.y = rays[index].d.y / mag;
@@ -143,12 +156,16 @@ __global__ void traceRays(Ray* rays, Face* faces, unsigned int numFaces, Interse
 		rays[index].d.z -= mag * faces[s].n.z;
 		rays[index].index = s;
 	}
+	else {
+		data[index * nReflections].angle = 0.0;
+		data[index * nReflections].spectrum = NULL;
+	}
 	delete[] times;
 }
 
 __global__ void addToSample(double angle, double* spectrum, double* sample) {
-	if (angle < 0 && spectrum[threadIdx.x]) {
-		sample[threadIdx.x] -= spectrum[threadIdx.x] * angle;
+	if (spectrum[threadIdx.x]) {
+		sample[threadIdx.x] += spectrum[threadIdx.x] * angle;
 	}
 }
 
@@ -157,7 +174,8 @@ __global__ void computeSamples(IntersectionData* data, double* samples, unsigned
 	unsigned int index = (blockIdx.x * width + blockIdx.y) * nRays * nRays + threadIdx.x * nRays + threadIdx.y;
 	memset(&samples[STEPS * index], 0, sizeof(double) * STEPS);
 	for (unsigned int i = 0; i < nReflections; i++) { 
-		addToSample << <1, STEPS >> > (data[index * nReflections + i].angle, data[index * nReflections + i].spectrum, &samples[STEPS * index]);
+		if(data[index * nReflections + i].spectrum)
+			addToSample << <1, STEPS >> > (data[index * nReflections + i].angle, data[index * nReflections + i].spectrum, &samples[STEPS * index]);
 	}
 }
 
@@ -176,8 +194,10 @@ __global__ void computePixels(double* samples, double* pixels, unsigned int widt
 	}
 }
 
-__global__ void setSpectrums(Face* faces, unsigned int len, double* spectrums) {
+__global__ void setSpectrums(Face* faces, unsigned int len, double* spectrums, double* spectrumsBack) {
 	unsigned int i = (blockIdx.x << 9) + threadIdx.x;
-	if (i < len)
+	if (i < len) {
+		faces[(blockIdx.x << 9) + threadIdx.x].spdBack = &spectrumsBack[faces[(blockIdx.x << 9) + threadIdx.x].spdIndex];
 		faces[(blockIdx.x << 9) + threadIdx.x].spd = &spectrums[faces[(blockIdx.x << 9) + threadIdx.x].spdIndex];
+	}
 }

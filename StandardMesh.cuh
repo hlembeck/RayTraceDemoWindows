@@ -16,6 +16,6 @@ Mesh standardPlateHOST(double* spectrum);
 
 Mesh standardPrismHOST(double* spectrum);
 
-void addPlateHOST(std::vector<Face>& faceVector, double* transformMatrix, unsigned int spectrum);
+void addPlateHOST(std::vector<Face>& faceVector, double* transformMatrix, unsigned int spectrum, double reflectivity, double refractiveIndex);
 
-void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsigned int spectrum);
+void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsigned int spectrum, double reflectivity, double refractiveIndex);

@@ -6,7 +6,7 @@ bool populateSamples(ImgParamPinhole& params, IntersectionData* &intersectionDat
 bool populatePixelSamples(ImgParamPinhole& params, double* &samples, double* &pixelSamples, cudaError_t& cudaStatus);
 bool populateRGBQuadArray(ImgParamPinhole& params, unsigned char* &rgbQuadArr, double* pixelSamples, cudaError_t& cudaStatus);
 
-bool paramsToDevice(SceneParams& sceneParams, double*& spectrums, Face*& faces, unsigned int*& meshes, cudaError_t& cudaStatus);
+bool paramsToDevice(SceneParams& sceneParams, double*& spectrums, double*& spectrumsBack, Face*& faces, unsigned int*& meshes, cudaError_t& cudaStatus);
 
 
 bool getPinholeImage(RTParams& rtParams) {
@@ -39,6 +39,7 @@ bool getPinholeImage(RTParams& rtParams) {
 	LOCATION: Values stored on Device
 	*/
 	double* spectrums = 0;
+	double* spectrumsBack = 0;
 	/*
 	Array of Face structs that represents the faces present in a scene.
 	LOCATION: Device.
@@ -55,14 +56,12 @@ bool getPinholeImage(RTParams& rtParams) {
 
 	cudaSetDevice(0);
 
-	if (!paramsToDevice(rtParams.sceneParams, spectrums, faces, meshes, cudaStatus))
+	if (!paramsToDevice(rtParams.sceneParams, spectrums, spectrumsBack, faces, meshes, cudaStatus))
 		goto error;
 
 	//Populate rays with device-allocated data
 	if (!populateRays(rtParams.params, rays, cudaStatus))
 		goto error;
-
-	//printFaces << <1, 1 >> > (faces, rtParams.sceneParams.faces.size());
 
 	//Populate the intersection data
 	if (!populateIntersectionData(rtParams.params, rays, faces, rtParams.sceneParams.faces.size(), intersectionData, cudaStatus))
@@ -81,6 +80,7 @@ bool getPinholeImage(RTParams& rtParams) {
 		goto error;
 
 	cudaStatus = cudaFree(spectrums);
+	cudaStatus = cudaFree(spectrumsBack);
 	cudaStatus = cudaFree(intersectionData);
 	if (cudaStatus != cudaSuccess) {
 		printf("Failed to free intersectionData or spectrums.\n");
@@ -108,6 +108,8 @@ error:
 	OutputDebugString(TEXT("(In getPinholeImage()) There was an error.\n"));
 	cudaFree(rays);
 	cudaFree(intersectionData);
+	cudaFree(spectrums);
+	cudaFree(spectrumsBack);
 	cudaFree(samples);
 	cudaFree(pixelSamples);
 	cudaDeviceReset();
@@ -294,8 +296,7 @@ bool populateRGBQuadArray(ImgParamPinhole& params, unsigned char* &rgbQuadArr, d
 	return true;
 }
 
-bool paramsToDevice(SceneParams& sceneParams, double*& spectrums, Face*& faces, unsigned int*& meshes, cudaError_t& cudaStatus) {
-
+bool paramsToDevice(SceneParams& sceneParams, double*& spectrums, double*& spectrumsBack, Face*& faces, unsigned int*& meshes, cudaError_t& cudaStatus) {
 	unsigned int numBlocks;
 
 	cudaStatus = cudaMalloc((void**)&spectrums, sizeof(double) * sceneParams.spectrums.size());
@@ -306,6 +307,17 @@ bool paramsToDevice(SceneParams& sceneParams, double*& spectrums, Face*& faces, 
 	cudaStatus = cudaMemcpy(spectrums, sceneParams.spectrums.data(), sizeof(double) * sceneParams.spectrums.size(), cudaMemcpyHostToDevice);
 	if (cudaStatus != cudaSuccess) {
 		OutputDebugString(TEXT("(In paramsToDevice()) Failed cudaMemcpy of spectrums.\n"));
+		return false;
+	}
+
+	cudaStatus = cudaMalloc((void**)&spectrumsBack, sizeof(double) * sceneParams.spectrums.size());
+	if (cudaStatus != cudaSuccess) {
+		OutputDebugString(TEXT("(In paramsToDevice()) Failed cudaMalloc of spectrumsBack.\n"));
+		return false;
+	}
+	cudaStatus = cudaMemcpy(spectrumsBack, sceneParams.spectrumsBack.data(), sizeof(double) * sceneParams.spectrums.size(), cudaMemcpyHostToDevice);
+	if (cudaStatus != cudaSuccess) {
+		OutputDebugString(TEXT("(In paramsToDevice()) Failed cudaMemcpy of spectrumsBack.\n"));
 		return false;
 	}
 
@@ -321,7 +333,7 @@ bool paramsToDevice(SceneParams& sceneParams, double*& spectrums, Face*& faces, 
 	}
 
 	numBlocks = (sceneParams.faces.size() & 511 ? (sceneParams.faces.size() >> 9) + 1 : (sceneParams.faces.size() >> 9));
-	setSpectrums << <numBlocks, 512 >> > (faces, sceneParams.faces.size(), spectrums);
+	setSpectrums << <numBlocks, 512 >> > (faces, sceneParams.faces.size(), spectrums, spectrumsBack);
 	cudaStatus = cudaDeviceSynchronize();
 	if (cudaStatus != cudaSuccess) {
 		OutputDebugString(TEXT("(In paramsToDevice()) Failed setSpectrums().\n"));

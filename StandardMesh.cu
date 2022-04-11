@@ -19,7 +19,9 @@ __global__ void standardPlate(Mesh* mesh, double* spectrum) {
 		{1.0, 1.0, 0.0},
 		{-1.0, 1.0, 0.0},
 		{0.0, 0.0, 1.0},
-		spectrum
+		1,
+		1,
+		spectrum,
 	};
 
 	mesh->faces[1] = {
@@ -27,6 +29,8 @@ __global__ void standardPlate(Mesh* mesh, double* spectrum) {
 		{-1.0, 1.0, 0.0},
 		{-1.0, -1.0, 0.0},
 		{0.0, 0.0, 1.0},
+		1,
+		1,
 		spectrum
 	};
 }
@@ -40,6 +44,8 @@ __global__ void standardPrism(Mesh* mesh, double* spectrum) {
 		{-1.0,1.0,-1.0},
 		{1.0,1.0,-1.0},
 		{0.0,0.0,-1.0},
+		1,
+		1,
 		spectrum
 	};
 	mesh->faces[1] = {
@@ -47,6 +53,8 @@ __global__ void standardPrism(Mesh* mesh, double* spectrum) {
 		{-1.0,-1.0,-1.0},
 		{-1.0,1.0,-1.0},
 		{0.0,0.0,-1.0},
+		1,
+		1,
 		spectrum
 	};
 	//Front face
@@ -55,6 +63,8 @@ __global__ void standardPrism(Mesh* mesh, double* spectrum) {
 		{-1.0,1.0,1.0},
 		{1.0,1.0,1.0},
 		{0.0,0.0,1.0},
+		1,
+		1,
 		spectrum
 	};
 	mesh->faces[3] = {
@@ -62,6 +72,8 @@ __global__ void standardPrism(Mesh* mesh, double* spectrum) {
 		{-1.0,-1.0,1.0},
 		{-1.0,1.0,1.0},
 		{0.0,0.0,1.0},
+		1,
+		1,
 		spectrum
 	};
 	//Top face
@@ -70,6 +82,8 @@ __global__ void standardPrism(Mesh* mesh, double* spectrum) {
 		{1.0,1.0,-1.0},
 		{-1.0,1.0,-1.0},
 		{0.0,1.0,0.0},
+		1,
+		1,
 		spectrum
 	};
 	mesh->faces[5] = {
@@ -77,6 +91,8 @@ __global__ void standardPrism(Mesh* mesh, double* spectrum) {
 		{-1.0,1.0,-1.0},
 		{-1.0,1.0,1.0},
 		{0.0,1.0,0.0},
+		1,
+		1,
 		spectrum
 	};
 	//Bottom face
@@ -85,6 +101,8 @@ __global__ void standardPrism(Mesh* mesh, double* spectrum) {
 		{-1.0,-1.0,-1.0},
 		{1.0,-1.0,-1.0},
 		{0.0,-1.0,0.0},
+		1,
+		1,
 		spectrum
 	};
 	mesh->faces[7] = {
@@ -92,6 +110,8 @@ __global__ void standardPrism(Mesh* mesh, double* spectrum) {
 		{-1.0,-1.0,1.0},
 		{-1.0,-1.0,-1.0},
 		{0.0,-1.0,0.0},
+		1,
+		1,
 		spectrum
 	};
 	//Left face
@@ -100,6 +120,8 @@ __global__ void standardPrism(Mesh* mesh, double* spectrum) {
 		{1.0,1.0,-1.0},
 		{1.0,1.0,1.0},
 		{1.0,0.0,0.0},
+		1,
+		1,
 		spectrum
 	};
 	mesh->faces[9] = {
@@ -107,6 +129,8 @@ __global__ void standardPrism(Mesh* mesh, double* spectrum) {
 		{1.0,1.0,1.0},
 		{1.0,-1.0,1.0},
 		{1.0,0.0,0.0},
+		1,
+		1,
 		spectrum
 	};
 	//Right face
@@ -115,6 +139,8 @@ __global__ void standardPrism(Mesh* mesh, double* spectrum) {
 		{-1.0,1.0,1.0},
 		{-1.0,1.0,-1.0},
 		{-1.0,0.0,0.0},
+		1,
+		1,
 		spectrum
 	};
 	mesh->faces[11] = {
@@ -122,6 +148,8 @@ __global__ void standardPrism(Mesh* mesh, double* spectrum) {
 		{-1.0,1.0,1.0},
 		{-1.0,1.0,-1.0},
 		{-1.0,0.0,0.0},
+		1,
+		1,
 		spectrum
 	};
 }
@@ -133,6 +161,8 @@ Mesh standardPlateHOST(double* spectrum) {
 		{-1.0, 1.0, 0.0},
 		{1.0, 1.0, 0.0},
 		{0.0, 0.0, -1.0},
+		1,
+		1,
 		spectrum
 	};
 
@@ -141,6 +171,8 @@ Mesh standardPlateHOST(double* spectrum) {
 		{-1.0, -1.0, 0.0},
 		{-1.0, 1.0, 0.0},
 		{0.0, 0.0, -1.0},
+		1,
+		1,
 		spectrum
 	};
 	return Mesh{ faces,2 };
@@ -154,6 +186,8 @@ Mesh standardPrismHOST(double* spectrum) {
 		{-1.0,1.0,-1.0},
 		{1.0,1.0,-1.0},
 		{0.0,0.0,-1.0},
+		1,
+		1,
 		spectrum
 	};
 	faces[1] = {
@@ -161,6 +195,8 @@ Mesh standardPrismHOST(double* spectrum) {
 		{-1.0,-1.0,-1.0},
 		{-1.0,1.0,-1.0},
 		{0.0,0.0,-1.0},
+		1,
+		1,
 		spectrum
 	};
 	//Front face
@@ -169,6 +205,8 @@ Mesh standardPrismHOST(double* spectrum) {
 		{-1.0,1.0,1.0},
 		{1.0,1.0,1.0},
 		{0.0,0.0,1.0},
+		1,
+		1,
 		spectrum
 	};
 	faces[3] = {
@@ -176,6 +214,8 @@ Mesh standardPrismHOST(double* spectrum) {
 		{-1.0,-1.0,1.0},
 		{-1.0,1.0,1.0},
 		{0.0,0.0,1.0},
+		1,
+		1,
 		spectrum
 	};
 	//Top face
@@ -184,6 +224,8 @@ Mesh standardPrismHOST(double* spectrum) {
 		{1.0,1.0,-1.0},
 		{-1.0,1.0,-1.0},
 		{0.0,1.0,0.0},
+		1,
+		1,
 		spectrum
 	};
 	faces[5] = {
@@ -191,6 +233,8 @@ Mesh standardPrismHOST(double* spectrum) {
 		{-1.0,1.0,-1.0},
 		{-1.0,1.0,1.0},
 		{0.0,1.0,0.0},
+		1,
+		1,
 		spectrum
 	};
 	//Bottom face
@@ -199,6 +243,8 @@ Mesh standardPrismHOST(double* spectrum) {
 		{-1.0,-1.0,-1.0},
 		{1.0,-1.0,-1.0},
 		{0.0,-1.0,0.0},
+		1,
+		1,
 		spectrum
 	};
 	faces[7] = {
@@ -206,6 +252,8 @@ Mesh standardPrismHOST(double* spectrum) {
 		{-1.0,-1.0,1.0},
 		{-1.0,-1.0,-1.0},
 		{0.0,-1.0,0.0},
+		1,
+		1,
 		spectrum
 	};
 	//Left face
@@ -214,6 +262,8 @@ Mesh standardPrismHOST(double* spectrum) {
 		{1.0,1.0,-1.0},
 		{1.0,1.0,1.0},
 		{1.0,0.0,0.0},
+		1,
+		1,
 		spectrum
 	};
 	faces[9] = {
@@ -221,6 +271,8 @@ Mesh standardPrismHOST(double* spectrum) {
 		{1.0,1.0,1.0},
 		{1.0,-1.0,1.0},
 		{1.0,0.0,0.0},
+		1,
+		1,
 		spectrum
 	};
 	//Right face
@@ -229,6 +281,8 @@ Mesh standardPrismHOST(double* spectrum) {
 		{-1.0,1.0,1.0},
 		{-1.0,1.0,-1.0},
 		{-1.0,0.0,0.0},
+		1,
+		1,
 		spectrum
 	};
 	faces[11] = {
@@ -236,12 +290,14 @@ Mesh standardPrismHOST(double* spectrum) {
 		{-1.0,1.0,1.0},
 		{-1.0,1.0,-1.0},
 		{-1.0,0.0,0.0},
+		1,
+		1,
 		spectrum
 	};
 	return Mesh{faces,12};
 }
 
-void addPlateHOST(std::vector<Face>& faceVector, double* transformMatrix, unsigned int spectrum) {
+void addPlateHOST(std::vector<Face>& faceVector, double* transformMatrix, unsigned int spectrum, double reflectivity, double refractiveIndex) {
 	Face face, *meshStart;
 
 	face = {
@@ -251,6 +307,8 @@ void addPlateHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 		{0.0, 0.0, 1.0}
 	};
 	face.spdIndex = spectrum;
+	face.reflectivity = reflectivity;
+	face.refractiveIndex = refractiveIndex;
 	
 	faceVector.push_back(face);
 
@@ -261,6 +319,8 @@ void addPlateHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 		{0.0, 0.0, 1.0}
 	};
 	face.spdIndex = spectrum;
+	face.reflectivity = reflectivity;
+	face.refractiveIndex = refractiveIndex;
 
 	faceVector.push_back(face);
 
@@ -269,7 +329,7 @@ void addPlateHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 	transformMeshHOST(meshStart,2,transformMatrix);
 }
 
-void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsigned int spectrum) {
+void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsigned int spectrum, double reflectivity, double refractiveIndex) {
 	Face face, *meshStart;
 
 	//Back face
@@ -280,6 +340,8 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 		{0.0,0.0,-1.0},
 	};
 	face.spdIndex = spectrum;
+	face.reflectivity = reflectivity;
+	face.refractiveIndex = refractiveIndex;
 	faceVector.push_back(face);
 
 	face = {
@@ -289,6 +351,8 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 		{0.0,0.0,-1.0},
 	};
 	face.spdIndex = spectrum;
+	face.reflectivity = reflectivity;
+	face.refractiveIndex = refractiveIndex;
 	faceVector.push_back(face);
 
 	//Front face
@@ -299,6 +363,8 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 		{0.0,0.0,1.0},
 	};
 	face.spdIndex = spectrum;
+	face.reflectivity = reflectivity;
+	face.refractiveIndex = refractiveIndex;
 	faceVector.push_back(face);
 
 	face = {
@@ -308,6 +374,8 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 		{0.0,0.0,1.0},
 	};
 	face.spdIndex = spectrum;
+	face.reflectivity = reflectivity;
+	face.refractiveIndex = refractiveIndex;
 	faceVector.push_back(face);
 
 	//Top face
@@ -318,6 +386,8 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 		{0.0,1.0,0.0},
 	};
 	face.spdIndex = spectrum;
+	face.reflectivity = reflectivity;
+	face.refractiveIndex = refractiveIndex;
 	faceVector.push_back(face);
 
 	face = {
@@ -327,6 +397,8 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 		{0.0,1.0,0.0},
 	};
 	face.spdIndex = spectrum;
+	face.reflectivity = reflectivity;
+	face.refractiveIndex = refractiveIndex;
 	faceVector.push_back(face);
 
 	//Bottom face
@@ -337,6 +409,8 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 		{0.0,-1.0,0.0},
 	};
 	face.spdIndex = spectrum;
+	face.reflectivity = reflectivity;
+	face.refractiveIndex = refractiveIndex;
 	faceVector.push_back(face);
 
 	face = {
@@ -346,6 +420,8 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 		{0.0,-1.0,0.0},
 	};
 	face.spdIndex = spectrum;
+	face.reflectivity = reflectivity;
+	face.refractiveIndex = refractiveIndex;
 	faceVector.push_back(face);
 
 	//Left face
@@ -356,6 +432,8 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 		{1.0,0.0,0.0},
 	};
 	face.spdIndex = spectrum;
+	face.reflectivity = reflectivity;
+	face.refractiveIndex = refractiveIndex;
 	faceVector.push_back(face);
 
 	face = {
@@ -365,6 +443,8 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 		{1.0,0.0,0.0},
 	};
 	face.spdIndex = spectrum;
+	face.reflectivity = reflectivity;
+	face.refractiveIndex = refractiveIndex;
 	faceVector.push_back(face);
 
 	//Right face
@@ -375,6 +455,8 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 		{-1.0,0.0,0.0},
 	};
 	face.spdIndex = spectrum;
+	face.reflectivity = reflectivity;
+	face.refractiveIndex = refractiveIndex;
 	faceVector.push_back(face);
 
 	face = {
@@ -384,6 +466,8 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 		{-1.0,0.0,0.0},
 	};
 	face.spdIndex = spectrum;
+	face.reflectivity = reflectivity;
+	face.refractiveIndex = refractiveIndex;
 	faceVector.push_back(face);
 
 

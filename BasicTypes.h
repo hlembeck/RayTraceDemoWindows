@@ -30,10 +30,13 @@ struct Face {
 	Triple<double> p2;
 	Triple<double> p3;
 	Triple<double> n;
+	double refractiveIndex;
+	double reflectivity;
 	union {
 		double* spd;
 		unsigned int spdIndex;
 	};
+	double* spdBack;
 };
 
 struct Mesh {

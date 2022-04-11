@@ -4,7 +4,7 @@
 
 //Declarations of functions
 bool initializeWindows(HINSTANCE hInstance, int nShowCmd);
-void spectrumFromRGB(COLORREF rgbColor, std::vector<double>& spectrums);
+void spectrumFromRGB(COLORREF rgbColor1, COLORREF rgbColor2, std::vector<double>& spectrums, std::vector<double>& spectrumsBack);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 DWORD WINAPI ThreadProcRT(LPVOID lpParameter);
 void printImgParamPinhole(ImgParamPinhole& params);
@@ -16,7 +16,6 @@ const TCHAR szDiagName[] = TEXT("Diagnostic Window");
 static SceneParams sceneParams = {};
 
 static CHOOSECOLOR chooseColorStruct = {};
-static COLORREF acrCustClr[16];
 
 //Vector of window handles
 static std::vector<HWND> hWindows;
@@ -62,6 +61,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 	ImgParamPinhole params;
 	TCHAR buf[512] = {};
 	TCHAR* endPtr;
+	COLORREF acrCustClr[16] = {};
 	//Used to transform meshes before they are added to faceVector above.
 	static double* transformMatrix;
 
@@ -110,8 +110,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 				if (ChooseColor(&chooseColorStruct)) {
 					windowManager.push_back(createTransformationWindow(hWnd, GetModuleHandle(NULL)));
 
-					addPrismHOST(sceneParams.faces, transformMatrix, sceneParams.spectrums.size());
-					spectrumFromRGB(chooseColorStruct.rgbResult, sceneParams.spectrums);
+					addPrismHOST(sceneParams.faces, transformMatrix, sceneParams.spectrums.size(), 1, 1);
+					spectrumFromRGB(chooseColorStruct.rgbResult, chooseColorStruct.lpCustColors[0], sceneParams.spectrums, sceneParams.spectrumsBack);
 					sceneParams.meshes.push_back(sceneParams.faces.size());
 				}
 				return 0;
@@ -129,8 +129,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 				};
 				if (ChooseColor(&chooseColorStruct)) {
 					windowManager.push_back(createTransformationWindow(hWnd, GetModuleHandle(NULL)));
-					addPlateHOST(sceneParams.faces, transformMatrix,sceneParams.spectrums.size());
-					spectrumFromRGB(chooseColorStruct.rgbResult, sceneParams.spectrums);
+					addPlateHOST(sceneParams.faces, transformMatrix, sceneParams.spectrums.size(), 1, 1);
+					spectrumFromRGB(chooseColorStruct.rgbResult, chooseColorStruct.lpCustColors[0], sceneParams.spectrums, sceneParams.spectrumsBack);
 					sceneParams.meshes.push_back(sceneParams.faces.size());
 				}
 				return 0;
@@ -171,37 +171,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			}
 		}
 		return 0;
-	/*case AppMsg_MatrixWindow:
-		popWindow();
-		if (sceneParams.meshes.size() < 2)
-			transformMeshHOST(sceneParams.faces.data(), sceneParams.meshes.back(), (double*)wParam);
-		else {
-			i = sceneParams.meshes[sceneParams.meshes.size() - 2];
-			transformMeshHOST(&sceneParams.faces[i], sceneParams.meshes.back() - i, (double*)wParam);
-		}
-		if (!IsWindow(diagnosticWnd)) {
-			diagnosticWnd = CreateWindow(szDiagName, szDiagName, WS_OVERLAPPEDWINDOW | WS_VSCROLL, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, GetModuleHandle(NULL), NULL);
-
-			ShowWindow(diagnosticWnd, SW_SHOW);
-		}
-		SendMessage(diagnosticWnd, AppMsg_UpdateDiag, (WPARAM)&sceneParams, (LPARAM)&chooseColorStruct.rgbResult);
-		return 0;*/
 	case AppMsg_TransformationWindow:
 		switch (wParam) {
 		case 0:
 			SendMessage(windowManager.back().hwnd, WM_CLOSE, 0, 0);
 			popWindow();
-			//windowManager.push_back(createTranslateWindow(windowManager[0].hwnd, GetModuleHandle(NULL)));
 			break;
 		case 1:
 			SendMessage(windowManager.back().hwnd, WM_CLOSE, 0, 0);
 			popWindow();
-			//windowManager.push_back(createScaleWindow(windowManager[0].hwnd, GetModuleHandle(NULL)));
 			break;
 		case 2:
 			SendMessage(windowManager.back().hwnd, WM_CLOSE, 0, 0);
 			popWindow();
-			//windowManager.push_back(createRotateWindow(windowManager[0].hwnd, GetModuleHandle(NULL)));
 			break;
 		case 3:
 			SendMessage(windowManager.back().hwnd, WM_CLOSE, 0, 0);
@@ -220,9 +202,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 				ShowWindow(diagnosticWnd, SW_SHOW);
 			}
 			SendMessage(diagnosticWnd, AppMsg_UpdateDiag, (WPARAM)&sceneParams, (LPARAM)&chooseColorStruct.rgbResult);
-
-
-			//windowManager.push_back(createMatrixWindow(windowManager[0].hwnd, GetModuleHandle(NULL)));
 		}
 		return 0;
 	case AppMsg_TransformationWindow + 1:
@@ -378,19 +357,27 @@ DWORD WINAPI ThreadProcRT(LPVOID lpParameter) {
 }
 
 //Heuristic. Not an inverse for the map spectrum -> rgb that is given in ColorModel.h.
-void spectrumFromRGB(COLORREF rgbColor, std::vector<double>& spectrums) {
+void spectrumFromRGB(COLORREF rgbColor1, COLORREF rgbColor2, std::vector<double>& spectrums, std::vector<double>& spectrumsBack) {
 	double* spectrum = new double[STEPS];
+
 	unsigned char stepLength = (MAX_WAVELENGTH - MIN_WAVELENGTH) / STEPS;
 	unsigned short redStep = (650 - MIN_WAVELENGTH) / stepLength;
 	unsigned short greenStep = (545 - MIN_WAVELENGTH) / stepLength;
 	unsigned short blueStep = (450 - MIN_WAVELENGTH) / stepLength;
 
 	memset(spectrum, 0, sizeof(double) * STEPS);
-	spectrum[redStep] = 4.5 * (rgbColor & 0x000000FF) / 255.0;
-	spectrum[greenStep] = 3.0 * ((rgbColor >> 8) & 0x0000FF) / 255.0;
-	spectrum[blueStep] = 2.0 * ((rgbColor >> 16) & 0x000000FF) / 255.0;
+	spectrum[redStep] = 4.5 * (rgbColor1 & 0x000000FF) / 255.0;
+	spectrum[greenStep] = 3.0 * ((rgbColor1 >> 8) & 0x0000FF) / 255.0;
+	spectrum[blueStep] = 2.0 * ((rgbColor1 >> 16) & 0x000000FF) / 255.0;
 
 	spectrums.insert(spectrums.end(), spectrum, spectrum + STEPS);
+
+	memset(spectrum, 0, sizeof(double) * STEPS);
+	spectrum[redStep] = 4.5 * (rgbColor2 & 0x000000FF) / 255.0;
+	spectrum[greenStep] = 3.0 * ((rgbColor2 >> 8) & 0x0000FF) / 255.0;
+	spectrum[blueStep] = 2.0 * ((rgbColor2 >> 16) & 0x000000FF) / 255.0;
+
+	spectrumsBack.insert(spectrumsBack.end(), spectrum, spectrum + STEPS);
 
 	delete[] spectrum;
 }

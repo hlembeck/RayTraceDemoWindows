@@ -17,4 +17,4 @@ __global__ void computeSamples(IntersectionData* data, double* samples, unsigned
 
 __global__ void computePixels(double* samples, double* pixels, unsigned int width, unsigned int nRays);
 
-__global__ void setSpectrums(Face* faces, unsigned int len, double* spectrums);
+__global__ void setSpectrums(Face* faces, unsigned int len, double* spectrums, double* spectrumsBack);
