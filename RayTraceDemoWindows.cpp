@@ -174,8 +174,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 	case AppMsg_TransformationWindow:
 		switch (wParam) {
 		case 0:
-			SendMessage(windowManager.back().hwnd, WM_CLOSE, 0, 0);
-			popWindow();
+			if (sceneParams.meshes.size() > 1) {
+				i = sceneParams.meshes[sceneParams.meshes.size() - 2];
+				setMeshParams(&sceneParams.faces[i], sceneParams.meshes.back() - i, ((std::pair<double, double>*)lParam)->first, ((std::pair<double, double>*)lParam)->second);
+			}
+			else {
+				setMeshParams(sceneParams.faces.data(), sceneParams.faces.size(), ((std::pair<double, double>*)lParam)->first, ((std::pair<double, double>*)lParam)->second);
+			}
 			break;
 		case 1:
 			SendMessage(windowManager.back().hwnd, WM_CLOSE, 0, 0);

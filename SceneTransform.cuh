@@ -10,6 +10,7 @@ double* getRotateTransformHOST(Triple<double>& v, double a);
 //Kernel for scene transform with respect to a transformation matrix.
 __global__ void transformMeshes(Mesh* meshes, double* mat);
 
+void setMeshParams(Face* faces, unsigned int len, double refractiveIndex, double reflectivity);
 void transformMeshHOST(Face* faces, unsigned int len, double* mat);
 
 //Store a=a*b

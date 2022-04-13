@@ -64,6 +64,7 @@ __global__ void generateRaysPinhole(Ray* rays, Triple<double> pinhole, double to
 	rays[index].d.y = pinhole.y - y;
 	rays[index].d.z = pinhole.z;
 	rays[index].index = -1;
+	rays[index].reflectivity = 1;
 }
 
 __device__ double timeOfIntersection(Ray& ray, Face& face) {
@@ -136,8 +137,7 @@ __global__ void traceRays(Ray* rays, Face* faces, unsigned int numFaces, Interse
 		rays[index].o.x += rays[index].d.x * times[s];
 		rays[index].o.y += rays[index].d.y * times[s];
 		rays[index].o.z += rays[index].d.z * times[s];
-		data[index * nReflections].angle = faces[s].reflectivity * dot(rays[index].d, faces[s].n) / (rays[index].d.x * rays[index].d.x + rays[index].d.y * rays[index].d.y + rays[index].d.z * rays[index].d.z);
-
+		data[index * nReflections].angle = rays[index].reflectivity * dot(rays[index].d, faces[s].n) / (rays[index].d.x * rays[index].d.x + rays[index].d.y * rays[index].d.y + rays[index].d.z * rays[index].d.z);
 		if (data[index * nReflections].angle < 0) {
 			data[index * nReflections].spectrum = faces[s].spd;
 			data[index * nReflections].angle *= -1;
@@ -155,6 +155,7 @@ __global__ void traceRays(Ray* rays, Face* faces, unsigned int numFaces, Interse
 		rays[index].d.y -= mag * faces[s].n.y;
 		rays[index].d.z -= mag * faces[s].n.z;
 		rays[index].index = s;
+		rays[index].reflectivity = faces[s].reflectivity;
 	}
 	else {
 		data[index * nReflections].angle = 0.0;

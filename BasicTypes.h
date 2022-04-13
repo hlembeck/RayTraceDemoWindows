@@ -53,6 +53,7 @@ struct Ray {
 	Triple<double> o;
 	Triple<double> d;
 	int index;
+	double reflectivity;
 };
 
 struct IntersectionData {

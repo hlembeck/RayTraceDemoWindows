@@ -6,12 +6,69 @@ static std::vector<HWND> transformWindows;
 
 static int state;
 
+void updateMeshParams() {
+	std::pair<double, double> surfaceParams;
+
+	TCHAR* buf = new TCHAR[64], * tBuf = buf;
+	int bufIndex = 0;
+	memset(buf, 0, sizeof(TCHAR) * 64);
+
+	bufIndex += SendMessage(transformWindows[0], WM_GETTEXT, 16, (LPARAM)tBuf) + 1;
+	surfaceParams.first = wcstod(tBuf, NULL);
+	tBuf += bufIndex;
+	bufIndex += SendMessage(transformWindows[1], WM_GETTEXT, 16, (LPARAM)tBuf) + 1;
+	surfaceParams.second = wcstod(tBuf, NULL);
+
+	SendMessage(hMainWnd, AppMsg_TransformationWindow, (WPARAM)0, (LPARAM)&surfaceParams);
+}
+
 void updateState(HWND hWnd) {
 	for (unsigned int i = 0; i < transformWindows.size(); i++) {
 		DestroyWindow(transformWindows[i]);
 	}
 	transformWindows.clear();
 	switch (state) {
+	case -2:
+		transformWindows.push_back(CreateWindow(
+			TEXT("edit"),
+			NULL,
+			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
+			150,
+			0,
+			100,
+			25,
+			hWnd,
+			(HMENU)transformationMenuID,
+			NULL,
+			NULL
+		));
+		transformWindows.push_back(CreateWindow(
+			TEXT("edit"),
+			NULL,
+			WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP,
+			150,
+			30,
+			100,
+			25,
+			hWnd,
+			(HMENU)(transformationMenuID + 1),
+			NULL,
+			NULL
+		));
+		transformWindows.push_back(CreateWindow(
+			TEXT("BUTTON"),
+			TEXT("Submit"),
+			WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+			150,
+			60,
+			100,
+			25,
+			hWnd,
+			(HMENU)(transformationMenuID + 7),
+			NULL,
+			NULL
+		));
+		break;
 	case -1:
 		transformWindows.push_back(CreateWindow(
 			TEXT("BUTTON"),
@@ -303,6 +360,10 @@ LRESULT CALLBACK TransformationWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
 		switch (state) {
+		case -2:
+			TextOut(hdc, 0, 0, L"Refractive Index", 16);
+			TextOut(hdc, 0, 30, L"Reflectivity", 12);
+			break;
 		case 0:
 			TextOut(hdc, 0, 0, L"X:", 2);
 			TextOut(hdc, 0, 30, L"Y:", 2);
@@ -358,6 +419,15 @@ LRESULT CALLBACK TransformationWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 			//Button press
 			case transformationMenuID + 7:
 				switch (state) {
+				case -2:
+					updateMeshParams();
+					state = -1;
+					updateState(hWnd);
+					GetClientRect(hWnd, &clientRect);
+					clientHeight = clientRect.bottom - clientRect.top;
+					clientWidth = clientRect.right - clientRect.left;
+					PostMessage(hWnd, WM_SIZE, 0, (clientRect.right - clientRect.left >> 16) || (clientRect.bottom - clientRect.top));
+					break;
 				case 0:
 					transformMatrix = new double[16];
 					memset(transformMatrix, 0, sizeof(double) * 16);
@@ -433,68 +503,8 @@ windowInfo createTransformationWindow(HWND hWndMain, HINSTANCE hInstacnce) {
 		),
 		transformWindows};
 
-	state = -1;
+	state = -2;
 	updateState(ret.hwnd);
-
-	////Button to display translate menu for the mesh
-	//transformWindows.push_back(CreateWindow(
-	//	TEXT("BUTTON"),
-	//	TEXT("Translate"),
-	//	WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-	//	0,
-	//	0,
-	//	75,
-	//	25,
-	//	ret.hwnd,
-	//	(HMENU)transformationMenuID,
-	//	NULL,
-	//	NULL
-	//));
-
-	////Button to display scale menu for the mesh
-	//transformWindows.push_back(CreateWindow(
-	//	TEXT("BUTTON"),
-	//	TEXT("Scale"),
-	//	WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-	//	0,
-	//	30,
-	//	75,
-	//	25,
-	//	ret.hwnd,
-	//	(HMENU)(transformationMenuID + 1),
-	//	NULL,
-	//	NULL
-	//));
-
-	////Button to display rotate menu for the mesh
-	//transformWindows.push_back(CreateWindow(
-	//	TEXT("BUTTON"),
-	//	TEXT("Rotate"),
-	//	WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-	//	0,
-	//	60,
-	//	75,
-	//	25,
-	//	ret.hwnd,
-	//	(HMENU)(transformationMenuID  + 2),
-	//	NULL,
-	//	NULL
-	//));
-
-	////Button to display matrix menu for the mesh
-	//transformWindows.push_back(CreateWindow(
-	//	TEXT("BUTTON"),
-	//	TEXT("Submit"),
-	//	WS_TABSTOP | WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-	//	0,
-	//	90,
-	//	75,
-	//	25,
-	//	ret.hwnd,
-	//	(HMENU)(transformationMenuID + 3),
-	//	NULL,
-	//	NULL
-	//));
 
 	ShowWindow(ret.hwnd, SW_SHOW);
 	UpdateWindow(ret.hwnd);

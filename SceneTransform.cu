@@ -129,6 +129,13 @@ __global__ void transformMeshes(Mesh* meshes, double* mat) {
 	transformFaces << <numBlocks, 512 >> > (meshes[blockIdx.x].faces, mat, len);
 }
 
+void setMeshParams(Face* faces, unsigned int len, double refractiveIndex, double reflectivity) {
+	while (len) {
+		faces[--len].reflectivity = reflectivity;
+		faces[len].refractiveIndex = refractiveIndex;
+	}
+}
+
 void crossProductHOST(Triple<double>& v1, Triple<double>& v2, Triple<double>& res) {
 	res.x = v1.y * v2.z - v1.z * v2.y;
 	res.y = v1.z * v2.x - v1.x * v2.z;
