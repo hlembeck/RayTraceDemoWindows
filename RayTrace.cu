@@ -93,7 +93,6 @@ __global__ void testFaces(Ray& ray, Face* faces, unsigned int len, double* times
 	unsigned int index = blockIdx.x * 512 + threadIdx.x;
 	if (index < len) {
 		if (ray.index == index) {
-			//printf("test\n");
 			times[index] = DBL_MAX;
 			return;
 		}

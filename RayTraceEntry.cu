@@ -4,18 +4,136 @@ bool populateRays(ImgParamPinhole& params, Ray* &rays, cudaError_t& cudaStatus);
 bool populateIntersectionData(ImgParamPinhole& params, Ray* &rays, Face* faces, unsigned int numFaces, IntersectionData* &intersectionData, cudaError_t& cudaStatus);
 bool populateSamples(ImgParamPinhole& params, IntersectionData* &intersectionData, double* &samples, cudaError_t& cudaStatus);
 bool populatePixelSamples(ImgParamPinhole& params, double* &samples, double* &pixelSamples, cudaError_t& cudaStatus);
-bool populateRGBQuadArray(ImgParamPinhole& params, unsigned char* &rgbQuadArr, double* pixelSamples, cudaError_t& cudaStatus);
+bool populateRGBQuadArray(ImgParamPinhole& params, unsigned int rowWidth, unsigned char* &rgbQuadArr, double* pixelSamples, cudaError_t& cudaStatus);
 
 bool paramsToDevice(SceneParams& sceneParams, double*& spectrums, double*& spectrumsBack, Face*& faces, unsigned int*& meshes, cudaError_t& cudaStatus);
 
+bool rtWrapper(RTParams& rtParams) {
+	RTParams rtBlockParams = rtParams;
 
-bool getPinholeImage(RTParams& rtParams) {
+	if (rtBlockParams.params.sensorWidth / (double)rtBlockParams.params.width != rtBlockParams.params.sensorHeight / (double)rtBlockParams.params.height)
+		return false;
+
+	std::pair<double, double> unitsPerPixel = { rtBlockParams.params.sensorWidth / rtBlockParams.params.width, rtBlockParams.params.sensorHeight / rtBlockParams.params.height };
+	unsigned int stepsWidth = rtBlockParams.params.width / 256;
+	unsigned int stepsHeight = rtBlockParams.params.height / 256;
+
+	rtParams.rgbQuadArr = new unsigned char[4 * rtParams.params.width * rtParams.params.height];
+	rtBlockParams.rgbQuadArr = rtParams.rgbQuadArr;
+
+	if (stepsWidth) {
+		rtBlockParams.params.sensorWidth = 256 * unitsPerPixel.first;
+		rtBlockParams.params.width = 256;
+		if (stepsHeight) {
+			rtBlockParams.params.sensorHeight = 256 * unitsPerPixel.second;
+			rtBlockParams.params.height = 256;
+			//Fill blocks of size 256x256
+			for (unsigned int i = 0; i < stepsHeight; i++) {
+				rtBlockParams.params.left = rtParams.params.left;
+				for (unsigned int j = 0; j < stepsWidth; j++) {
+					//printf("(%g %g)[%g %g]\n\n\n", rtBlockParams.params.left, rtBlockParams.params.top, rtBlockParams.params.sensorWidth, rtBlockParams.params.sensorHeight);
+					if (!getPinholeImage(rtBlockParams, rtParams.params.width * 4)) {
+						OutputDebugString(TEXT("(In rtWrapper()) Failed getPinholeImage().\n"));
+						return false;
+					}
+					rtBlockParams.rgbQuadArr += 1024;
+					rtBlockParams.params.left += rtBlockParams.params.sensorWidth;
+				}
+				rtBlockParams.rgbQuadArr += 261120 * stepsWidth;
+				rtBlockParams.params.top -= rtBlockParams.params.sensorHeight;
+			}
+			//Fill blocks on right side except bottom
+			rtBlockParams.params.top = rtParams.params.top;
+			rtBlockParams.params.width = rtParams.params.width - stepsWidth * 256;
+			rtBlockParams.rgbQuadArr = rtParams.rgbQuadArr + 1024 * stepsWidth;
+			rtBlockParams.params.sensorWidth = rtParams.params.sensorWidth - (stepsWidth * 256) * unitsPerPixel.first;
+			for (unsigned int i = 0; i < stepsHeight; i++) {
+
+				if (!getPinholeImage(rtBlockParams, rtParams.params.width * 4)) {
+					OutputDebugString(TEXT("(In rtWrapper()) Failed getPinholeImage().\n"));
+					return false;
+				}
+
+				rtBlockParams.rgbQuadArr += 1024 * rtParams.params.width;
+				rtBlockParams.params.top -= rtBlockParams.params.sensorHeight;
+			}
+			//Fill blocks on the bottom, except the right corner
+			rtBlockParams.params.left = rtParams.params.left;
+			rtBlockParams.params.width = 256;
+			rtBlockParams.params.sensorWidth = 256 * unitsPerPixel.first;
+			rtBlockParams.params.height = rtParams.params.height - 256 * stepsHeight;
+			rtBlockParams.params.sensorHeight = rtParams.params.sensorHeight - (256 * stepsHeight) * unitsPerPixel.second;
+			rtBlockParams.rgbQuadArr = rtParams.rgbQuadArr + 1024 * stepsHeight * rtParams.params.width;
+			for (unsigned int i = 0; i < stepsWidth; i++) {
+				if (!getPinholeImage(rtBlockParams, rtParams.params.width * 4)) {
+					OutputDebugString(TEXT("(In rtWrapper()) Failed getPinholeImage().\n"));
+					return false;
+				}
+
+				rtBlockParams.rgbQuadArr += 1024;
+				rtBlockParams.params.left += rtBlockParams.params.sensorWidth;
+			}
+			//Fill bottom-right corner
+			rtBlockParams.params.width = rtParams.params.width - 256 * stepsWidth;
+			rtBlockParams.params.sensorWidth = rtParams.params.sensorWidth - (stepsWidth * 256) * unitsPerPixel.first;
+			if (!getPinholeImage(rtBlockParams, rtParams.params.width * 4)) {
+				OutputDebugString(TEXT("(In rtWrapper()) Failed getPinholeImage().\n"));
+				return false;
+			}
+			return true;
+		}
+		//Fill row
+		rtBlockParams.params.left = rtParams.params.left;
+		rtBlockParams.params.width = 256;
+		rtBlockParams.params.sensorWidth = 256 * unitsPerPixel.first;
+		for (unsigned int i = 0; i < stepsWidth; i++) {
+			if (!getPinholeImage(rtBlockParams, rtParams.params.width * 4)) {
+				OutputDebugString(TEXT("(In rtWrapper()) Failed getPinholeImage().\n"));
+				return false;
+			}
+			rtBlockParams.rgbQuadArr += 1024;
+			rtBlockParams.params.left += rtBlockParams.params.sensorWidth;
+		}
+		return true;
+	}
+	else if (stepsHeight) {
+		//Fill column
+		rtBlockParams.params.sensorHeight = 256 * unitsPerPixel.second;
+		rtBlockParams.params.height = 256;
+		rtBlockParams.params.width = rtParams.params.width - stepsWidth * 256;
+		rtBlockParams.params.sensorWidth = rtParams.params.sensorWidth - (stepsWidth * 256) * unitsPerPixel.first;
+		for (unsigned int i = 0; i < stepsHeight; i++) {
+			if (!getPinholeImage(rtBlockParams, rtParams.params.width * 4)) {
+				OutputDebugString(TEXT("(In rtWrapper()) Failed getPinholeImage().\n"));
+				return false;
+			}
+			rtBlockParams.rgbQuadArr += 1024 * rtParams.params.width;
+			rtBlockParams.params.top -= rtBlockParams.params.sensorHeight;
+		}
+		return true;
+	}
+
+	if (!getPinholeImage(rtParams, rtParams.params.width * 4)) {
+		OutputDebugString(TEXT("(In rtWrapper()) Failed getPinholeImage().\n"));
+		return false;
+	}
+
+	return true;
+}
+
+bool getPinholeImage(RTParams& rtBlockParams, unsigned int rowWidth) {
 	/*
 	To store the ray information for each sample ray.
 	LOCATION: Device
 	LENGTH: width * height * nRays * nRays
 	*/
 	Ray* rays = 0;
+	/*
+	To store the ray information for each refracted ray.
+	LOCATION: Device
+	LENGTH: width * height * nRays * nRays * 
+	*/
+	Ray* refractedRays = 0;
 	/*
 	To store the spectrumand angle corresponding to the surface hit on the all reflections of all sample rays.
 	LOCATION: Device
@@ -50,21 +168,21 @@ bool getPinholeImage(RTParams& rtParams) {
 	LOCATION: Device
 	*/
 	unsigned int* meshes = 0;
-	//unsigned int numSpectrums = rtParams.sceneParams.spectrums.size();
+	//unsigned int numSpectrums = rtBlockParams.sceneParams.spectrums.size();
 
 	cudaError_t cudaStatus;
 
 	cudaSetDevice(0);
 
-	if (!paramsToDevice(rtParams.sceneParams, spectrums, spectrumsBack, faces, meshes, cudaStatus))
+	if (!paramsToDevice(rtBlockParams.sceneParams, spectrums, spectrumsBack, faces, meshes, cudaStatus))
 		goto error;
 
 	//Populate rays with device-allocated data
-	if (!populateRays(rtParams.params, rays, cudaStatus))
+	if (!populateRays(rtBlockParams.params, rays, cudaStatus))
 		goto error;
 
 	//Populate the intersection data
-	if (!populateIntersectionData(rtParams.params, rays, faces, rtParams.sceneParams.faces.size(), intersectionData, cudaStatus))
+	if (!populateIntersectionData(rtBlockParams.params, rays, faces, rtBlockParams.sceneParams.faces.size(), intersectionData, cudaStatus))
 		goto error;
 
 	cudaStatus = cudaFree(rays);
@@ -76,7 +194,7 @@ bool getPinholeImage(RTParams& rtParams) {
 	}
 
 	//Populate samples with data from intersectionData
-	if (!populateSamples(rtParams.params, intersectionData, samples, cudaStatus))
+	if (!populateSamples(rtBlockParams.params, intersectionData, samples, cudaStatus))
 		goto error;
 
 	cudaStatus = cudaFree(spectrums);
@@ -88,7 +206,7 @@ bool getPinholeImage(RTParams& rtParams) {
 	}
 
 	//Populate pixel samples using data from samples
-	if (!populatePixelSamples(rtParams.params, samples, pixelSamples, cudaStatus))
+	if (!populatePixelSamples(rtBlockParams.params, samples, pixelSamples, cudaStatus))
 		goto error;
 
 	cudaStatus = cudaFree(samples);
@@ -98,7 +216,7 @@ bool getPinholeImage(RTParams& rtParams) {
 	}
 
 	//populate rgbBMP with RGB data from pixelSamples. pixelSamples is freed in this function. rgbBMP is allocated in this function, and must be freed from the heap after painting in window.
-	if (!populateRGBQuadArray(rtParams.params, rtParams.rgbQuadArr, pixelSamples, cudaStatus))
+	if (!populateRGBQuadArray(rtBlockParams.params, rowWidth, rtBlockParams.rgbQuadArr, pixelSamples, cudaStatus))
 		goto error;
 
 	cudaDeviceReset();
@@ -126,7 +244,7 @@ bool populateRays(ImgParamPinhole& params, Ray* &rays, cudaError_t& cudaStatus) 
 	dim3 numBlocks(params.height, params.width);
 	dim3 numThreadsPerBlock(params.nRays, params.nRays);
 
-	generateRaysPinhole << <numBlocks, numThreadsPerBlock >> > (rays, params.pinhole, params.sensorHeight / 2.0, -params.sensorWidth / 2.0, params.sensorWidth / (double)params.width, params.sensorWidth / ((double)params.width * (double)params.nRays), params.width, params.height, params.nRays);
+	generateRaysPinhole << <numBlocks, numThreadsPerBlock >> > (rays, params.pinhole, params.top, params.left, params.sensorWidth / (double)params.width, params.sensorWidth / ((double)params.width * (double)params.nRays), params.width, params.height, params.nRays);
 	cudaStatus = cudaDeviceSynchronize();
 	if (cudaStatus != cudaSuccess) {
 		OutputDebugString(TEXT("(In populateRays()) Failed generateRaysPinhole().\n"));
@@ -196,7 +314,7 @@ bool populatePixelSamples(ImgParamPinhole& params, double* &samples, double* &pi
 	}
 }
 
-bool populateRGBQuadArray(ImgParamPinhole& params, unsigned char* &rgbQuadArr, double* pixelSamples, cudaError_t& cudaStatus) {
+bool populateRGBQuadArray(ImgParamPinhole& params, unsigned int rowWidth, unsigned char* &rgbQuadArr, double* pixelSamples, cudaError_t& cudaStatus) {
 
 	double* colorMatchXYZ = 0;
 	double* tristimulusPixels = 0;
@@ -275,16 +393,16 @@ bool populateRGBQuadArray(ImgParamPinhole& params, unsigned char* &rgbQuadArr, d
 		return false;
 	}
 
-	rgbQuadArr = new unsigned char[4 * params.width * params.height];
-
-	cudaStatus = cudaMemcpy(rgbQuadArr, rgbPixels, 4 * params.width * params.height, cudaMemcpyDeviceToHost);
-	if (cudaStatus != cudaSuccess) {
-		OutputDebugString(TEXT("(In populateRGBQuadArray()) Failed memcopy of rgbPixels -> rgbBMP.\n"));
-		cudaFree(colorMatchXYZ);
-		cudaFree(tristimulusPixels);
-		cudaFree(pixelSamples);
-		cudaFree(rgbPixels);
-		return false;
+	for (unsigned int i = 0; i < params.height; i++) {
+		cudaStatus = cudaMemcpy(rgbQuadArr + i * rowWidth, rgbPixels + i * params.width * 4, 4 * params.width, cudaMemcpyDeviceToHost);
+		if (cudaStatus != cudaSuccess) {
+			OutputDebugString(TEXT("(In populateRGBQuadArray()) Failed memcopy of rgbPixels -> rgbBMP.\n"));
+			cudaFree(colorMatchXYZ);
+			cudaFree(tristimulusPixels);
+			cudaFree(pixelSamples);
+			cudaFree(rgbPixels);
+			return false;
+		}
 	}
 
 	cudaStatus = cudaFree(rgbPixels);

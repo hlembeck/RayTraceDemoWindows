@@ -19,3 +19,7 @@ Mesh standardPrismHOST(double* spectrum);
 void addPlateHOST(std::vector<Face>& faceVector, double* transformMatrix, unsigned int spectrum, double reflectivity, double refractiveIndex);
 
 void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsigned int spectrum, double reflectivity, double refractiveIndex);
+
+bool isVolume(Face* faces, unsigned int len);
+
+bool isOrientedVolume(Face* faces, unsigned int len);

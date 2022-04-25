@@ -19,6 +19,8 @@ struct ImgParamPinhole {
 	Triple<double> pinhole;
 	unsigned int width;
 	unsigned int height;
+	double left;
+	double top;
 	double sensorWidth;
 	double sensorHeight;
 	unsigned int nRays;

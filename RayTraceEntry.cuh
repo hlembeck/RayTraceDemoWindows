@@ -17,4 +17,5 @@ struct RTParams {
 	unsigned char* rgbQuadArr;
 };
 
-bool getPinholeImage(RTParams& rtParams);
+bool getPinholeImage(RTParams& rtBlockParams, unsigned int rowWidth);
+bool rtWrapper(RTParams& rtParams);

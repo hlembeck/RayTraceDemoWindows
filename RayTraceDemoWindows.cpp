@@ -154,12 +154,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 				params.sensorWidth = wcstod(endPtr, &endPtr);
 				SendMessage(hWindows[8], WM_GETTEXT, 32, (LPARAM)endPtr);
 				params.sensorHeight = wcstod(endPtr, &endPtr);
+				params.left = -params.sensorWidth / 2;
+				params.top = params.sensorHeight / 2;
 
 				SendMessage(hWindows[9], WM_GETTEXT, 32, (LPARAM)endPtr);
 				params.nRays = wcstol(endPtr, &endPtr, 10);
 				SendMessage(hWindows[10], WM_GETTEXT, 32, (LPARAM)endPtr);
 				params.nReflections = wcstol(endPtr, &endPtr, 10);
-
 				paramsRT.params = params;
 				if (!hThread) {
 					if (params.width == 0 && params.height == 0)
@@ -333,8 +334,8 @@ void printImgParamPinhole(ImgParamPinhole& params) {
 DWORD WINAPI ThreadProcRT(LPVOID lpParameter) {
 	ImgParamPinhole& params = ((RTParams*)lpParameter)->params;
 	unsigned char*& rgbQuadArr = ((RTParams*)lpParameter)->rgbQuadArr;
-	if (!getPinholeImage(*(RTParams*)lpParameter)) {
-		OutputDebugString(TEXT("(In ThreadProcRT()) Failed getPinholeBitmap().\n"));
+	if (!rtWrapper(*(RTParams*)lpParameter)) {
+		OutputDebugString(TEXT("(In ThreadProcRT()) Failed rtWraper().\n"));
 		delete[] rgbQuadArr;
 		rgbQuadArr = 0;
 		return 1;

@@ -308,7 +308,7 @@ void addPlateHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 	};
 	face.spdIndex = spectrum;
 	face.reflectivity = reflectivity;
-	face.refractiveIndex = refractiveIndex;
+	face.refractiveIndex = -refractiveIndex;
 	
 	faceVector.push_back(face);
 
@@ -320,7 +320,7 @@ void addPlateHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 	};
 	face.spdIndex = spectrum;
 	face.reflectivity = reflectivity;
-	face.refractiveIndex = refractiveIndex;
+	face.refractiveIndex = -refractiveIndex;
 
 	faceVector.push_back(face);
 
@@ -341,7 +341,7 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 	};
 	face.spdIndex = spectrum;
 	face.reflectivity = reflectivity;
-	face.refractiveIndex = refractiveIndex;
+	face.refractiveIndex = -refractiveIndex;
 	faceVector.push_back(face);
 
 	face = {
@@ -352,7 +352,7 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 	};
 	face.spdIndex = spectrum;
 	face.reflectivity = reflectivity;
-	face.refractiveIndex = refractiveIndex;
+	face.refractiveIndex = -refractiveIndex;
 	faceVector.push_back(face);
 
 	//Front face
@@ -364,7 +364,7 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 	};
 	face.spdIndex = spectrum;
 	face.reflectivity = reflectivity;
-	face.refractiveIndex = refractiveIndex;
+	face.refractiveIndex = -refractiveIndex;
 	faceVector.push_back(face);
 
 	face = {
@@ -375,7 +375,7 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 	};
 	face.spdIndex = spectrum;
 	face.reflectivity = reflectivity;
-	face.refractiveIndex = refractiveIndex;
+	face.refractiveIndex = -refractiveIndex;
 	faceVector.push_back(face);
 
 	//Top face
@@ -387,7 +387,7 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 	};
 	face.spdIndex = spectrum;
 	face.reflectivity = reflectivity;
-	face.refractiveIndex = refractiveIndex;
+	face.refractiveIndex = -refractiveIndex;
 	faceVector.push_back(face);
 
 	face = {
@@ -398,7 +398,7 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 	};
 	face.spdIndex = spectrum;
 	face.reflectivity = reflectivity;
-	face.refractiveIndex = refractiveIndex;
+	face.refractiveIndex = -refractiveIndex;
 	faceVector.push_back(face);
 
 	//Bottom face
@@ -410,7 +410,7 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 	};
 	face.spdIndex = spectrum;
 	face.reflectivity = reflectivity;
-	face.refractiveIndex = refractiveIndex;
+	face.refractiveIndex = -refractiveIndex;
 	faceVector.push_back(face);
 
 	face = {
@@ -421,7 +421,7 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 	};
 	face.spdIndex = spectrum;
 	face.reflectivity = reflectivity;
-	face.refractiveIndex = refractiveIndex;
+	face.refractiveIndex = -refractiveIndex;
 	faceVector.push_back(face);
 
 	//Left face
@@ -433,7 +433,7 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 	};
 	face.spdIndex = spectrum;
 	face.reflectivity = reflectivity;
-	face.refractiveIndex = refractiveIndex;
+	face.refractiveIndex = -refractiveIndex;
 	faceVector.push_back(face);
 
 	face = {
@@ -444,7 +444,7 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 	};
 	face.spdIndex = spectrum;
 	face.reflectivity = reflectivity;
-	face.refractiveIndex = refractiveIndex;
+	face.refractiveIndex = -refractiveIndex;
 	faceVector.push_back(face);
 
 	//Right face
@@ -456,7 +456,7 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 	};
 	face.spdIndex = spectrum;
 	face.reflectivity = reflectivity;
-	face.refractiveIndex = refractiveIndex;
+	face.refractiveIndex = -refractiveIndex;
 	faceVector.push_back(face);
 
 	face = {
@@ -467,10 +467,156 @@ void addPrismHOST(std::vector<Face>& faceVector, double* transformMatrix, unsign
 	};
 	face.spdIndex = spectrum;
 	face.reflectivity = reflectivity;
-	face.refractiveIndex = refractiveIndex;
+	face.refractiveIndex = -refractiveIndex;
 	faceVector.push_back(face);
 
 
 	meshStart = faceVector.data() + faceVector.size() - 12;
 	transformMeshHOST((Face*)meshStart, 12, transformMatrix);
+}
+
+inline bool isEqual(Triple<double>& a, Triple<double>& b) {
+	return (a.x == b.x) && (a.y == b.y) && (a.z == b.z);
+}
+
+bool isVolume(Face* faces, unsigned int len) {
+	/*
+	Argument of correctness
+
+	Regardless of orientability, a mesh that encloses a volume (rather, at least one volume -- a mesh can enclose multiple volumes) must have the property that every edge of each face must be covered by another distinct face. By requiring that there is a pair of faces that do not lie on the same plane, we ensure that some volume is enclosed by the mesh. This function executes a simple algorithm to test this. If the mesh is a volume, the function updates the faces to allow the refractive index to be considered. If not, rays will not split upon hitting the mesh.
+	*/
+
+	// (ret & 0x1) is a flag for whether faces[i] has edge [1,2] covered. Similarly for (ret & 0x2) and (ret & 0x4)
+	unsigned int ret;
+	for (unsigned int i = 0; i < len; i++) {
+		ret = 0;
+		
+		//Check for face adjacent (without regard to orientation) to edge [1,2] of faces[i]
+		for (unsigned int j = 0; j < len; j++) {
+			if (i == j)
+				continue;
+			if (isEqual(faces[i].p1, faces[j].p1)) {
+				if (isEqual(faces[i].p2, faces[j].p2) || isEqual(faces[i].p2, faces[j].p3)) {
+					//Covers face [1,2]
+					ret |= 1;
+				}
+				else if (isEqual(faces[i].p3, faces[j].p2) || isEqual(faces[i].p3, faces[j].p3)) {
+					//Covers face [1,3]
+					ret |= 4;
+				}
+				goto next;
+			}
+
+			if (isEqual(faces[i].p1, faces[j].p2)) {
+				if (isEqual(faces[i].p2, faces[j].p1) || isEqual(faces[i].p2, faces[j].p3)) {
+					//Covers face [1,2]
+					ret |= 1;
+				}
+				else if (isEqual(faces[i].p3, faces[j].p1) || isEqual(faces[i].p3, faces[j].p3)) {
+					//Covers face [1,3]
+					ret |= 4;
+				}
+				goto next;
+			}
+
+			if (isEqual(faces[i].p1, faces[j].p3)) {
+				if (isEqual(faces[i].p2, faces[j].p1) || isEqual(faces[i].p2, faces[j].p2)) {
+					//Covers face [1,2]
+					ret |= 1;
+				}
+				else if (isEqual(faces[i].p3, faces[j].p1) || isEqual(faces[i].p3, faces[j].p2)) {
+					//Covers face [1,3]
+					ret |= 4;
+				}
+				goto next;
+			}
+
+			if (isEqual(faces[i].p2, faces[j].p1)) {
+				if (isEqual(faces[i].p3, faces[j].p2) || isEqual(faces[i].p3, faces[j].p3)) {
+					ret |= 2;
+				}
+				goto next;
+			}
+
+			if (isEqual(faces[i].p2, faces[j].p2)) {
+				if (isEqual(faces[i].p3, faces[j].p1) || isEqual(faces[i].p3, faces[j].p3)) {
+					ret |= 2;
+				}
+				goto next;
+			}
+
+			if (isEqual(faces[i].p2, faces[j].p3)) {
+				if (isEqual(faces[i].p3, faces[j].p1) || isEqual(faces[i].p3, faces[j].p2)) {
+					ret |= 2;
+				}
+				goto next;
+			}
+		next:
+		}
+
+		if (ret != 7) {
+			printf("%d %d\n", ret, i);
+			return false;
+		}
+	}
+	return true;
+}
+
+bool isOrientedVolume(Face* faces, unsigned int len) {
+	unsigned int ret;
+
+	for (unsigned int i = 0; i < len; i++) {
+		ret = 0;
+
+		for (unsigned int j = 0; j < len; j++) {
+			if (i == j)
+				continue;
+			if (isEqual(faces[i].p1, faces[j].p1)) {
+				if (isEqual(faces[i].p2, faces[j].p3)) {
+					ret |= 1; 
+				}
+				else if (isEqual(faces[i].p3, faces[j].p2)) {
+					ret |= 4;
+				}
+			}
+			else if (isEqual(faces[i].p1, faces[j].p2)) {
+				if (isEqual(faces[i].p2, faces[j].p3)) {
+					ret |= 1;
+				}
+				else if (isEqual(faces[i].p3, faces[j].p3)) {
+					ret |= 4;
+				}
+			}
+			else if (isEqual(faces[i].p1, faces[j].p3)) {
+				if (isEqual(faces[i].p2, faces[j].p2)) {
+					ret |= 1;
+				}
+				else if (isEqual(faces[i].p3, faces[j].p1)) {
+					ret |= 4;
+				}
+			}
+			else if (isEqual(faces[i].p2, faces[j].p2) && isEqual(faces[i].p3,faces[j].p1)) {
+				ret |= 2;
+			}
+			else if (isEqual(faces[i].p2, faces[j].p1) && isEqual(faces[i].p3,faces[j].p3)) {
+				ret |= 2;
+			}
+			else if (isEqual(faces[i].p2, faces[j].p3) && isEqual(faces[i].p3,faces[j].p2)) {
+				ret |= 2;
+			}
+
+		}
+
+		if (ret != 7) {
+			printf("%d %d\n", ret, i);
+			return false;
+		}
+	}
+
+
+	for (unsigned int i = 0; i < len; i++) {
+		faces[i].refractiveIndex *= -1;
+	}
+
+	return true;
 }
